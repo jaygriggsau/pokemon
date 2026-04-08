@@ -1,0 +1,362 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0d0d12;
+  --surface: #16161f;
+  --surface-raised: #1e1e2a;
+  --border: #2a2a3a;
+  --red: #e63946;
+  --red-dim: #c22d39;
+  --yellow: #f4c430;
+  --text: #f0f0f5;
+  --muted: #8888a0;
+  --eu-color: #4a9eff;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Search / watchlist: 2 columns on phones, auto-fill on larger screens */
+.card-result-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .card-result-grid {
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(204px, 1fr));
+  }
+}
+
+.watchlist-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .watchlist-grid {
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+::selection { background: var(--red); color: white; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─── Buttons ─────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  min-height: 44px;
+  background: var(--red);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s, transform 0.1s;
+  text-decoration: none;
+}
+.btn-primary:hover  { background: var(--red-dim); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: color 0.15s, border-color 0.15s;
+  text-decoration: none;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ─── Input ───────────────────────────────── */
+.input-field {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--text);
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.input-field:focus { border-color: var(--red); }
+.input-field::placeholder { color: var(--muted); }
+
+/* 16px+ on small screens — avoids iOS zooming focused inputs */
+@media (max-width: 639px) {
+  .input-field {
+    font-size: 1rem;
+  }
+}
+
+/* ─── Generic surface card ────────────────── */
+.card-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.card-surface:hover { border-color: var(--red); transform: translateY(-2px); }
+
+/* ─── Search suggestion pill ──────────────── */
+.suggestion-pill {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.suggestion-pill:hover { color: var(--text); border-color: var(--muted); }
+
+/* ─── Card grid item ──────────────────────── */
+.card-item {
+  min-width: 0; /* allow grid children to shrink; prevents price overflow */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.card-item:hover {
+  border-color: rgba(230, 57, 70, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+}
+
+.card-item-image {
+  /* standard Pokemon card ratio 2.5 × 3.5 ≈ 5:7 */
+  aspect-ratio: 5 / 7;
+  position: relative;
+  display: block;
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+
+.card-item-no-image {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--border);
+}
+
+/* Hover overlay */
+.card-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.card-item:hover .card-item-overlay { opacity: 1; }
+
+/* Rarity badge */
+.card-item-rarity {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.72);
+  color: var(--yellow);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+/* Watch star button */
+.card-item-star {
+  position: absolute;
+  top: 7px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--yellow);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, transform 0.1s;
+  z-index: 2;
+  line-height: 1;
+}
+.card-item-star:hover   { background: rgba(0, 0, 0, 0.85); transform: scale(1.15); }
+.card-item-star:active  { transform: scale(0.95); }
+.card-item-star:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Card body */
+.card-item-body {
+  min-width: 0;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1;
+}
+
+.card-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.card-item-name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--text);
+  text-decoration: none;
+}
+.card-item-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.card-item-set {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* Prices — EU Market block stacked above US Market; label above amount in each */
+.card-item-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  min-width: 0;
+}
+
+.card-price-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  background: var(--surface-raised);
+  border-left: 3px solid var(--eu-color);
+}
+
+.card-price-cell--us {
+  border-left-color: var(--red);
+}
+
+.card-price-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.card-price-value {
+  min-width: 0;
+  width: 100%;
+  font-size: clamp(0.8rem, 2.8vw, 1rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.card-item-no-price {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: auto;
+}
+
+/* ─── Skeleton loader ─────────────────────── */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  overflow: hidden;
+}
+
+.skeleton-img {
+  aspect-ratio: 5 / 7;
+  background: var(--surface-raised);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-line {
+  height: 0.65rem;
+  border-radius: 0.3rem;
+  background: var(--surface-raised);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
