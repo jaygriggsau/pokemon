@@ -160,6 +160,23 @@ export default function CardDetailPage() {
               )}
             </div>
           )}
+
+          <div className="flex flex-col gap-1.5 pt-1">
+            <Link
+              href={`/marketplace?cardId=${card.id}`}
+              className="btn-ghost w-full text-center"
+              style={{ fontSize: "0.8125rem", borderColor: "var(--eu-color)", color: "var(--eu-color)" }}
+            >
+              Community marketplace — this card
+            </Link>
+            <Link
+              href={`/marketplace/sell?cardId=${card.id}`}
+              className="btn-ghost w-full text-center"
+              style={{ fontSize: "0.75rem" }}
+            >
+              Sell this card (list with photos)
+            </Link>
+          </div>
         </div>
 
         {/* Right: all card metadata */}

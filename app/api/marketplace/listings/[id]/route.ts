@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { sql } from "@/lib/db";
+
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id: idRaw } = await ctx.params;
+  const id = parseInt(idRaw, 10);
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid listing id" }, { status: 400 });
+  }
+
+  const rows = await sql`
+    SELECT
+      l.*,
+      u.name AS seller_name,
+      (SELECT COUNT(*)::int FROM seller_reviews sr WHERE sr.seller_id = l.seller_id) AS seller_review_count,
+      (SELECT ROUND(AVG(sr.rating)::numeric, 2) FROM seller_reviews sr WHERE sr.seller_id = l.seller_id) AS seller_avg_rating
+    FROM marketplace_listings l
+    JOIN users u ON u.id = l.seller_id
+    WHERE l.id = ${id}
+    LIMIT 1
+  `;
+
+  const listing = rows[0];
+  if (!listing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ listing });
+}
+
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id: idRaw } = await ctx.params;
+  const id = parseInt(idRaw, 10);
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid listing id" }, { status: 400 });
+  }
+
+  let body: { status?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (body.status !== "cancelled") {
+    return NextResponse.json({ error: "Only status: cancelled is supported" }, { status: 400 });
+  }
+
+  const updated = await sql`
+    UPDATE marketplace_listings
+    SET status = 'cancelled', updated_at = NOW()
+    WHERE id = ${id} AND seller_id = ${session.user.id} AND status = 'active'
+    RETURNING id
+  `;
+
+  if (!updated.length) {
+    return NextResponse.json({ error: "Listing not found or cannot be cancelled" }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

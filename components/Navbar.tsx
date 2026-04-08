@@ -149,6 +149,7 @@ export function Navbar() {
             style={{ borderColor: "var(--border)" }}
           >
             {navLink("/", "Search", pathname === "/")}
+            {navLink("/marketplace", "Marketplace", pathname === "/marketplace" || pathname.startsWith("/marketplace/"))}
             {session && navLink("/watchlist", "Watchlist", pathname === "/watchlist")}
           </div>
 
