@@ -31,16 +31,22 @@ export function validateListingPhotoUrl(url: unknown, field: string): string | n
   return null;
 }
 
+function centsNumeric(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return parseFloat(value.trim());
+  return NaN;
+}
+
 export function parsePositiveCents(value: unknown, label: string): { ok: true; cents: number } | { ok: false; error: string } {
-  const n = typeof value === "number" ? value : typeof value === "string" ? parseInt(value, 10) : NaN;
-  if (!Number.isFinite(n) || n <= 0) return { ok: false, error: `${label} must be a positive whole number` };
-  if (n !== Math.floor(n)) return { ok: false, error: `${label} must be a whole number of cents` };
+  const n = centsNumeric(value);
+  if (!Number.isFinite(n) || n <= 0) return { ok: false, error: `${label} must be a positive whole number of cents` };
+  if (!Number.isInteger(n)) return { ok: false, error: `${label} must be a whole number of cents` };
   return { ok: true, cents: n };
 }
 
 export function parseNonNegativeCents(value: unknown, label: string): { ok: true; cents: number } | { ok: false; error: string } {
-  const n = typeof value === "number" ? value : typeof value === "string" ? parseInt(value, 10) : NaN;
-  if (!Number.isFinite(n) || n < 0) return { ok: false, error: `${label} must be zero or a positive whole number` };
-  if (n !== Math.floor(n)) return { ok: false, error: `${label} must be a whole number of cents` };
+  const n = centsNumeric(value);
+  if (!Number.isFinite(n) || n < 0) return { ok: false, error: `${label} must be zero or a positive whole number of cents` };
+  if (!Number.isInteger(n)) return { ok: false, error: `${label} must be a whole number of cents` };
   return { ok: true, cents: n };
 }
