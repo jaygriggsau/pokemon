@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LISTING_CONDITIONS, LISTING_CURRENCIES } from "@/lib/marketplace";
 import { compressImageFile } from "@/lib/image-compress-client";
+import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
 
 function SellForm() {
@@ -285,9 +286,15 @@ function SellForm() {
                 <button
                   type="button"
                   onClick={() => {
-                    setSelected(c);
                     setCards([]);
                     setQuery("");
+                    setSelected(c);
+                    fetch(`/api/cards/${c.id}`)
+                      .then((r) => r.json())
+                      .then((data) => {
+                        if (data?.id && !data.error) setSelected(data as TcgCard);
+                      })
+                      .catch(() => {});
                   }}
                   className="w-full flex items-center gap-3 p-2 text-left hover:opacity-90"
                   style={{ background: "var(--surface-raised)" }}
@@ -328,6 +335,8 @@ function SellForm() {
               Change
             </button>
           </div>
+
+          <MarketPriceGuide card={selected} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
