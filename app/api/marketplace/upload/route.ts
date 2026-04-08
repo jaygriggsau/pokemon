@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
-      { error: "BLOB_READ_WRITE_TOKEN is not set — add a Vercel Blob store and env var." },
+      { error: "Image uploads are not configured. Set BLOB_READ_WRITE_TOKEN in the server environment." },
       { status: 503 }
     );
   }

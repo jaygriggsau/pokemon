@@ -151,6 +151,12 @@ export function Navbar() {
             {navLink("/", "Search", pathname === "/")}
             {navLink("/marketplace", "Marketplace", pathname === "/marketplace" || pathname.startsWith("/marketplace/"))}
             {session && navLink("/watchlist", "Watchlist", pathname === "/watchlist")}
+            {session &&
+              navLink(
+                "/marketplace/earnings",
+                "Earnings",
+                pathname === "/marketplace/earnings"
+              )}
           </div>
 
           <div className="hidden sm:flex items-center gap-2 shrink-0">

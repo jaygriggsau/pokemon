@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { stripePaymentsEnabled } from "@/lib/stripe";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id: idRaw } = await ctx.params;
@@ -14,6 +15,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     SELECT
       l.*,
       u.name AS seller_name,
+      u.stripe_charges_enabled,
+      u.stripe_connect_account_id,
       (SELECT COUNT(*)::int FROM seller_reviews sr WHERE sr.seller_id = l.seller_id) AS seller_review_count,
       (SELECT ROUND(AVG(sr.rating)::numeric, 2) FROM seller_reviews sr WHERE sr.seller_id = l.seller_id) AS seller_avg_rating
     FROM marketplace_listings l
@@ -22,12 +25,28 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     LIMIT 1
   `;
 
-  const listing = rows[0];
-  if (!listing) {
+  const row = rows[0] as Record<string, unknown> | undefined;
+  if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ listing });
+  const stripeCharges = Boolean(row.stripe_charges_enabled);
+  const stripeAccount = row.stripe_connect_account_id as string | null;
+  const marketplacePaymentsEnabled = stripePaymentsEnabled();
+  const cardCheckoutAvailable =
+    marketplacePaymentsEnabled && Boolean(stripeAccount && stripeCharges);
+
+  const {
+    stripe_charges_enabled: _sc,
+    stripe_connect_account_id: _sa,
+    ...listing
+  } = row as Record<string, unknown>;
+
+  return NextResponse.json({
+    listing,
+    cardCheckoutAvailable,
+    marketplacePaymentsEnabled,
+  });
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {

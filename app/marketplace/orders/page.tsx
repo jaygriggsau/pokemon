@@ -158,7 +158,7 @@ function OrdersContent() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold mt-2">Orders</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Purchases you can review; sales you made (demo — no payouts).
+          Purchases you can review and sales you have made. When Stripe is enabled, sellers receive payouts through Stripe; use Earnings to open your seller dashboard.
         </p>
       </div>
 

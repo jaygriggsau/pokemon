@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Database tables are missing. Run the SQL in schema.sql on your Neon database, then try again.",
+            "Database tables are missing. Run the SQL in schema.sql on your database, then try again.",
         },
         { status: 503 }
       );
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
     if (msg.includes("connect") || msg.includes("ECONNREFUSED") || msg.includes("timeout")) {
       return NextResponse.json(
-        { error: "Could not reach the database. Check DATABASE_URL and that Neon allows your IP." },
+        { error: "Could not reach the database. Check DATABASE_URL and that your host allows connections from this server." },
         { status: 503 }
       );
     }

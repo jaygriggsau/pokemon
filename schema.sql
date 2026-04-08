@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified TIMESTAMPTZ,
   image TEXT,
   password_hash TEXT,
+  stripe_connect_account_id TEXT UNIQUE,
+  stripe_charges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  stripe_payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -87,8 +90,14 @@ CREATE TABLE IF NOT EXISTS marketplace_orders (
   status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'cancelled')),
   completed_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  stripe_checkout_session_id TEXT,
+  stripe_payment_intent_id TEXT,
   UNIQUE (listing_id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_marketplace_orders_stripe_checkout_session
+  ON marketplace_orders (stripe_checkout_session_id)
+  WHERE stripe_checkout_session_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_marketplace_orders_buyer ON marketplace_orders (buyer_id);
 CREATE INDEX IF NOT EXISTS idx_marketplace_orders_seller ON marketplace_orders (seller_id);

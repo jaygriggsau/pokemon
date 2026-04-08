@@ -9,6 +9,7 @@ import {
   parsePositiveCents,
   parseNonNegativeCents,
 } from "@/lib/marketplace";
+import { getStripe } from "@/lib/stripe";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -132,6 +133,27 @@ export async function POST(req: Request) {
       : typeof description === "string"
         ? description
         : null;
+
+  const stripe = getStripe();
+  if (stripe) {
+    const [seller] = await sql`
+      SELECT stripe_connect_account_id FROM users WHERE id = ${session.user.id} LIMIT 1
+    `;
+    const connectId = seller?.stripe_connect_account_id as string | null;
+    if (!connectId) {
+      return NextResponse.json(
+        { error: "Set up seller payouts (Stripe) before you can list cards for sale." },
+        { status: 400 }
+      );
+    }
+    const acc = await stripe.accounts.retrieve(connectId);
+    if (!acc.charges_enabled) {
+      return NextResponse.json(
+        { error: "Finish Stripe seller onboarding before publishing a listing." },
+        { status: 400 }
+      );
+    }
+  }
 
   try {
     const [row] = await sql`

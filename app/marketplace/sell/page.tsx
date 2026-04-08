@@ -30,10 +30,41 @@ function SellForm() {
   const [backPreview, setBackPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stripePayout, setStripePayout] = useState<{
+    paymentsEnabled: boolean;
+    needsOnboarding: boolean;
+    chargesEnabled: boolean;
+  } | null>(null);
+  const [payoutLoading, setPayoutLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/auth/signin?callbackUrl=/marketplace/sell");
   }, [status, router]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    setPayoutLoading(true);
+    fetch("/api/stripe/connect/status")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setStripePayout({
+          paymentsEnabled: Boolean(d.paymentsEnabled),
+          needsOnboarding: Boolean(d.needsOnboarding),
+          chargesEnabled: Boolean(d.chargesEnabled),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setStripePayout(null);
+      })
+      .finally(() => {
+        if (!cancelled) setPayoutLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status, searchParams]);
 
   useEffect(() => {
     if (!preCardId || selected) return;
@@ -93,9 +124,24 @@ function SellForm() {
     }
   }
 
+  async function startPayoutSetup() {
+    try {
+      const res = await fetch("/api/stripe/connect/onboard", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Could not start onboarding");
+      if (d.url) window.location.href = d.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Onboarding failed");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled) {
+      setError("Finish Stripe seller onboarding before publishing.");
+      return;
+    }
     if (!selected) {
       setError("Select a card from search");
       return;
@@ -181,9 +227,40 @@ function SellForm() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Sell a card</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Front and back photos are uploaded to Vercel Blob, then the listing stores public URLs. Set item price and postage separately.
+          Front and back photos are uploaded to secure storage; your listing stores the image links. Set item price and postage separately.
+          {stripePayout?.paymentsEnabled
+            ? " Buyers pay with card; payouts go to your Stripe seller account (platform fee on each sale)."
+            : null}
         </p>
       </div>
+
+      {!payoutLoading && stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled && (
+        <div
+          className="rounded-xl p-4 flex flex-col gap-3"
+          style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
+        >
+          <p className="text-sm font-medium">Set up payouts to sell</p>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            This marketplace uses Stripe. Connect once so you can receive money when your cards sell. Withdraw to your bank
+            from the Stripe seller dashboard.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn-primary text-sm" onClick={startPayoutSetup}>
+              Connect Stripe
+            </button>
+            <Link href="/marketplace/earnings" className="btn-ghost text-sm text-center">
+              Earnings &amp; withdrawals
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {!payoutLoading && stripePayout?.paymentsEnabled && stripePayout.chargesEnabled && (
+        <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
+          Seller payouts connected. A platform fee (see site terms) is deducted from each sale before funds reach your Stripe
+          balance.
+        </p>
+      )}
 
       {!selected ? (
         <div className="flex flex-col gap-3">

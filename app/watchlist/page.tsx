@@ -127,7 +127,7 @@ export default function WatchlistPage() {
 
                 <div className="mt-auto flex gap-2">
                   <Link
-                    href={`/?q=${encodeURIComponent(item.card_name)}`}
+                    href={`/cards/${item.card_id}`}
                     className="btn-ghost flex-1 text-xs"
                   >
                     View price

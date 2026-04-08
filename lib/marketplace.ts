@@ -11,7 +11,7 @@ export type ListingCondition = (typeof LISTING_CONDITIONS)[number];
 export const LISTING_CURRENCIES = ["USD", "EUR"] as const;
 export type ListingCurrency = (typeof LISTING_CURRENCIES)[number];
 
-/** HTTPS URLs from Vercel Blob (stored in DB instead of inline data). */
+/** HTTPS URLs from the configured blob storage host (upload via /api/marketplace/upload). */
 export function validateListingPhotoUrl(url: unknown, field: string): string | null {
   if (typeof url !== "string" || !url.trim()) return `${field} is required`;
   let u: URL;
@@ -22,10 +22,10 @@ export function validateListingPhotoUrl(url: unknown, field: string): string | n
   }
   if (u.protocol !== "https:") return `${field} must use HTTPS`;
   const host = u.hostname.toLowerCase();
-  const isVercelBlob =
+  const isAllowedBlobHost =
     host.endsWith(".public.blob.vercel-storage.com") || host === "public.blob.vercel-storage.com";
-  if (!isVercelBlob) {
-    return `${field} must be a Vercel Blob URL (upload via /api/marketplace/upload)`;
+  if (!isAllowedBlobHost) {
+    return `${field} must be an image URL from the marketplace upload flow`;
   }
   if (url.length > 2048) return `${field} URL is too long`;
   return null;

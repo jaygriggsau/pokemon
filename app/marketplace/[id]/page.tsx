@@ -34,6 +34,8 @@ export default function ListingDetailPage() {
   const { data: session } = useSession();
   const { format } = useCurrency();
   const [listing, setListing] = useState<ListingRow | null>(null);
+  const [cardCheckoutAvailable, setCardCheckoutAvailable] = useState(false);
+  const [marketplacePaymentsEnabled, setMarketplacePaymentsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
@@ -42,11 +44,22 @@ export default function ListingDetailPage() {
   const id = params?.id;
 
   useEffect(() => {
+    if (typeof window === "undefined" || !id) return;
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("checkout") === "cancelled") {
+      alert("Payment was cancelled.");
+      router.replace(`/marketplace/${id}`, { scroll: false });
+    }
+  }, [id, router]);
+
+  useEffect(() => {
     if (!id) return;
     fetch(`/api/marketplace/listings/${id}`)
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ?? "Not found");
+        setCardCheckoutAvailable(Boolean(d.cardCheckoutAvailable));
+        setMarketplacePaymentsEnabled(Boolean(d.marketplacePaymentsEnabled));
         return d.listing as ListingRow;
       })
       .then(setListing)
@@ -56,12 +69,26 @@ export default function ListingDetailPage() {
 
   async function buy() {
     if (!listing || !session) return;
-    const ok = window.confirm(
-      "Record this purchase? No real payment is processed in this demo — use this only as a prototype."
-    );
-    if (!ok) return;
     setBuying(true);
     try {
+      if (cardCheckoutAvailable) {
+        const res = await fetch("/api/marketplace/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId: listing.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        throw new Error("No checkout URL returned");
+      }
+      const ok = window.confirm(
+        "Record this purchase without a card payment? This is only used when Stripe is not configured on the server."
+      );
+      if (!ok) return;
       const res = await fetch("/api/marketplace/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,6 +150,7 @@ export default function ListingDetailPage() {
   const total = format((listing.price_cents + listing.postage_cents) / 100, cur);
   const isSeller = session?.user?.id === listing.seller_id;
   const canBuy = Boolean(session && !isSeller && listing.status === "active");
+  const sellerCardReady = !marketplacePaymentsEnabled || cardCheckoutAvailable;
 
   return (
     <div className="flex flex-col gap-8 max-w-3xl mx-auto">
@@ -237,9 +265,20 @@ export default function ListingDetailPage() {
             </button>
           )}
 
-          {canBuy && (
+          {marketplacePaymentsEnabled && canBuy && !cardCheckoutAvailable && (
+            <p className="text-xs rounded-lg p-3" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
+              This seller is not ready for card checkout yet (payout setup incomplete). You can check back later or contact
+              them off-site.
+            </p>
+          )}
+
+          {canBuy && sellerCardReady && (
             <button type="button" className="btn-primary w-full" disabled={buying} onClick={buy}>
-              {buying ? "Processing…" : "Buy now (demo)"}
+              {buying
+                ? "Processing…"
+                : cardCheckoutAvailable
+                  ? "Pay with card"
+                  : "Record purchase (no card)"}
             </button>
           )}
 

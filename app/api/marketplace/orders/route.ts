@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { getStripe } from "@/lib/stripe";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -61,6 +62,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (getStripe()) {
+    return NextResponse.json(
+      {
+        error: "Use Pay with card on the listing page—this marketplace uses Stripe Checkout.",
+      },
+      { status: 400 }
+    );
+  }
+
   let body: { listingId?: number };
   try {
     body = await req.json();
@@ -101,7 +111,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     orderId: order.id,
-    message:
-      "Purchase recorded. This demo does not process real payments — arrange shipping with the seller off-platform if you use this in production.",
+    message: "Purchase recorded (no payment processor configured on this server).",
   });
 }
