@@ -31,7 +31,7 @@ function MarketplaceContent() {
         setListings(d.listings ?? []);
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Couldn’t load listings.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   if (getStripe()) {
     return NextResponse.json(
       {
-        error: "Use Pay with card on the listing page—this marketplace uses Stripe Checkout.",
+        error: "Use Pay with card on the listing page (this site uses Stripe for purchases).",
       },
       { status: 400 }
     );
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
   const listingId =
     typeof body.listingId === "number" ? body.listingId : parseInt(String(body.listingId), 10);
   if (!Number.isFinite(listingId)) {
-    return NextResponse.json({ error: "Invalid listing" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid or missing listing." }, { status: 400 });
   }
 
   const buyerId = session.user.id;
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
   const order = inserted[0];
   if (!order) {
     return NextResponse.json(
-      { error: "Could not complete purchase — listing may be gone, sold, or yours." },
+      { error: "Purchase didn’t go through—it may be sold, removed, or your own listing." },
       { status: 400 }
     );
   }

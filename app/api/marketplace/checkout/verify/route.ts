@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function GET(req: Request) {
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.json({ error: "Stripe is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Stripe isn’t configured on this server." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 
   const cs = await stripe.checkout.sessions.retrieve(sessionId);
   if (cs.metadata?.buyer_id !== session.user.id) {
-    return NextResponse.json({ error: "Not your checkout session." }, { status: 403 });
+    return NextResponse.json({ error: "That checkout belongs to another account." }, { status: 403 });
   }
 
   return NextResponse.json({

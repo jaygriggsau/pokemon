@@ -39,8 +39,7 @@ export async function POST(req: Request) {
       const msg = authErr instanceof Error ? authErr.message : "Session error";
       return NextResponse.json(
         {
-          error:
-            "Could not read your session. Try signing out and back in. If this persists, check NEXTAUTH_SECRET matches your deployment.",
+          error: "Sign out and sign back in. If this keeps happening, the server auth settings may be wrong.",
           detail: msg,
         },
         { status: 401 }
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN?.trim();
     if (!blobToken) {
       return NextResponse.json(
-        { error: "Image uploads are not configured. Set BLOB_READ_WRITE_TOKEN in the server environment." },
+        { error: "Image uploads aren’t enabled on this server." },
         { status: 503 }
       );
     }
@@ -65,7 +64,7 @@ export async function POST(req: Request) {
     } catch (parseErr) {
       console.error("[marketplace/upload] formData", parseErr);
       return NextResponse.json(
-        { error: "Could not read upload data. Try smaller images or check your connection." },
+        { error: "Upload failed to load. Try smaller images or a better connection." },
         { status: 400 }
       );
     }
@@ -76,7 +75,7 @@ export async function POST(req: Request) {
     const frontBlob = asBlobPart(front);
     const backBlob = asBlobPart(back);
     if (!frontBlob || !backBlob) {
-      return NextResponse.json({ error: "Missing front or back image (use field names front and back)" }, { status: 400 });
+      return NextResponse.json({ error: "Send both front and back images." }, { status: 400 });
     }
 
     if (frontBlob.size < 1 || backBlob.size < 1) {

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function POST() {
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.json({ error: "Stripe is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Stripe isn’t configured on this server." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -22,7 +22,7 @@ export async function POST() {
     SELECT email, stripe_connect_account_id FROM users WHERE id = ${uid} LIMIT 1
   `;
   if (!row?.email) {
-    return NextResponse.json({ error: "Account needs an email address." }, { status: 400 });
+    return NextResponse.json({ error: "Your account needs an email to connect Stripe." }, { status: 400 });
   }
 
   const country = (process.env.STRIPE_CONNECT_DEFAULT_COUNTRY || "US").trim().toUpperCase();

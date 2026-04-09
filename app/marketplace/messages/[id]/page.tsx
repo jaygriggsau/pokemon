@@ -122,7 +122,7 @@ export default function MessageThreadPage() {
     return (
       <div className="max-w-lg mx-auto py-12 text-center flex flex-col gap-3">
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Invalid conversation link.
+          This conversation link isn’t valid.
         </p>
         <Link href="/marketplace/messages" className="btn-primary text-center">
           Back to messages
@@ -143,7 +143,7 @@ export default function MessageThreadPage() {
     return (
       <div className="max-w-lg mx-auto py-12 text-center flex flex-col gap-3">
         <p className="text-sm" style={{ color: "var(--red)" }}>
-          {loadError ?? "Could not open conversation."}
+          {loadError ?? "Couldn’t open this conversation."}
         </p>
         <Link href="/marketplace/messages" className="btn-primary text-center">
           Back to messages

@@ -11,7 +11,8 @@ import {
   parseNonNegativeCents,
 } from "@/lib/marketplace";
 import { mirrorCatalogImageToBlob } from "@/lib/marketplace-image-blob";
-import { isSellerSubscriptionActive, sellerSubscriptionConfigured } from "@/lib/seller-subscription";
+import { sellerSubscriptionConfigured, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
+import { getLiveSellerPlanForPrice } from "@/lib/seller-subscription-stripe-verify";
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
   if (cardIdRaw) {
     cardId = parseInt(cardIdRaw, 10);
     if (!Number.isFinite(cardId)) {
-      return NextResponse.json({ error: "Invalid cardId" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid card filter." }, { status: 400 });
     }
   }
 
@@ -109,19 +110,19 @@ export async function POST(req: Request) {
 
   const cid = typeof cardId === "number" ? cardId : parseInt(String(cardId), 10);
   if (!Number.isFinite(cid) || cid <= 0) {
-    return NextResponse.json({ error: "Invalid card" }, { status: 400 });
+    return NextResponse.json({ error: "Choose a valid card." }, { status: 400 });
   }
 
   if (typeof cardName !== "string" || !cardName.trim()) {
-    return NextResponse.json({ error: "Card name is required" }, { status: 400 });
+    return NextResponse.json({ error: "Card name is required." }, { status: 400 });
   }
 
   if (!LISTING_CONDITIONS.includes(conditionGrade as (typeof LISTING_CONDITIONS)[number])) {
-    return NextResponse.json({ error: "Invalid condition" }, { status: 400 });
+    return NextResponse.json({ error: "That condition isn’t allowed." }, { status: 400 });
   }
 
   if (!LISTING_CURRENCIES.includes(currency as ListingCurrency)) {
-    return NextResponse.json({ error: "Unsupported listing currency" }, { status: 400 });
+    return NextResponse.json({ error: "That currency isn’t supported for listings." }, { status: 400 });
   }
 
   const p = parsePositiveCents(priceCents, "Price");
@@ -156,32 +157,55 @@ export async function POST(req: Request) {
   const stripe = getStripe();
   if (stripe) {
     const [seller] = await sql`
-      SELECT stripe_connect_account_id FROM users WHERE id = ${session.user.id} LIMIT 1
+      SELECT stripe_connect_account_id, stripe_seller_customer_id
+      FROM users
+      WHERE id = ${session.user.id}
+      LIMIT 1
     `;
     const connectId = seller?.stripe_connect_account_id as string | null;
+    const sellerCustomerId = seller?.stripe_seller_customer_id as string | null;
     if (!connectId) {
       return NextResponse.json(
-        { error: "Set up seller payouts (Stripe) before you can list cards for sale." },
+        { error: "Connect Stripe payouts on the Sell page before publishing." },
         { status: 400 }
       );
     }
     const acc = await stripe.accounts.retrieve(connectId);
     if (!acc.charges_enabled) {
       return NextResponse.json(
-        { error: "Finish Stripe seller onboarding before publishing a listing." },
+        { error: "Finish Stripe Connect setup on the Sell page before publishing." },
         { status: 400 }
       );
     }
 
     if (sellerSubscriptionConfigured()) {
-      const [subRow] = await sql`
-        SELECT seller_subscription_status FROM users WHERE id = ${session.user.id} LIMIT 1
-      `;
-      if (!isSellerSubscriptionActive(subRow?.seller_subscription_status as string | null)) {
+      const priceId = sellerSubscriptionPriceId();
+      if (!priceId) {
+        return NextResponse.json(
+          { error: "Seller plan price is missing in server settings." },
+          { status: 503 }
+        );
+      }
+      if (!sellerCustomerId) {
         return NextResponse.json(
           {
-            error:
-              "Activate your seller account: the $5/month subscription is required to publish listings. Open Seller account from the Sell page.",
+            error: "Subscribe on the Seller account page first, then try publishing again.",
+            code: "SELLER_SUBSCRIPTION_REQUIRED",
+          },
+          { status: 403 }
+        );
+      }
+      const live = await getLiveSellerPlanForPrice(stripe, sellerCustomerId, priceId);
+      if (!live.ok) {
+        return NextResponse.json(
+          { error: "Couldn’t confirm your plan with Stripe. Try again in a moment." },
+          { status: 503 }
+        );
+      }
+      if (!live.active) {
+        return NextResponse.json(
+          {
+            error: "No active seller plan. Renew or update billing on the Seller account page.",
             code: "SELLER_SUBSCRIPTION_REQUIRED",
           },
           { status: 403 }
@@ -216,6 +240,6 @@ export async function POST(req: Request) {
     `;
     return NextResponse.json({ id: row.id });
   } catch {
-    return NextResponse.json({ error: "Could not create listing" }, { status: 500 });
+    return NextResponse.json({ error: "Couldn’t save the listing. Try again." }, { status: 500 });
   }
 }

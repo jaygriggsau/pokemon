@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { appOrigin, getStripe, STRIPE_APP_USER_METADATA_KEY } from "@/lib/stripe";
-import { isSellerSubscriptionActive, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
+import { sellerSubscriptionPriceId } from "@/lib/seller-subscription";
+import { getLiveSellerPlanForPrice } from "@/lib/seller-subscription-stripe-verify";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ export async function POST() {
   const stripe = getStripe();
   const priceId = sellerSubscriptionPriceId();
   if (!stripe || !priceId) {
-    return NextResponse.json({ error: "Seller subscriptions are not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Seller subscriptions aren’t set up on this server." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -22,7 +23,7 @@ export async function POST() {
   const uid = session.user.id;
 
   const [user] = await sql`
-    SELECT email, stripe_seller_customer_id, seller_subscription_status
+    SELECT email, stripe_seller_customer_id
     FROM users
     WHERE id = ${uid}
     LIMIT 1
@@ -32,20 +33,30 @@ export async function POST() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  if (isSellerSubscriptionActive(user.seller_subscription_status as string | null)) {
-    return NextResponse.json(
-      { error: "Your seller subscription is already active.", alreadySubscribed: true },
-      { status: 400 }
-    );
-  }
-
   const email = user.email as string | null;
   const customerId = user.stripe_seller_customer_id as string | null;
+
+  if (customerId) {
+    const live = await getLiveSellerPlanForPrice(stripe, customerId, priceId);
+    if (!live.ok) {
+      return NextResponse.json(
+        { error: "Couldn’t reach Stripe. Try again in a moment." },
+        { status: 503 }
+      );
+    }
+    if (live.active) {
+      return NextResponse.json(
+        { error: "Your seller subscription is already active.", alreadySubscribed: true },
+        { status: 400 }
+      );
+    }
+  }
+
 
   const origin = appOrigin();
   if (!customerId && !email) {
     return NextResponse.json(
-      { error: "Your account needs an email address to subscribe." },
+      { error: "Add an email to your account before subscribing." },
       { status: 400 }
     );
   }
@@ -62,7 +73,7 @@ export async function POST() {
     ...(customerId ? { customer: customerId } : { customer_email: email! }),
   });
   if (!checkout.url) {
-    return NextResponse.json({ error: "Could not start checkout." }, { status: 500 });
+    return NextResponse.json({ error: "Couldn’t start checkout. Try again." }, { status: 500 });
   }
 
   return NextResponse.json({ url: checkout.url });

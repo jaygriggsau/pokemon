@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const sellerId = searchParams.get("sellerId")?.trim();
   if (!sellerId) {
-    return NextResponse.json({ error: "sellerId is required" }, { status: 400 });
+    return NextResponse.json({ error: "Missing seller ID." }, { status: 400 });
   }
 
   const limitRaw = searchParams.get("limit");
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     typeof body.rating === "number" ? body.rating : parseInt(String(body.rating), 10);
 
   if (!Number.isFinite(orderId) || !Number.isFinite(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json({ error: "Invalid order or rating (1–5)" }, { status: 400 });
+    return NextResponse.json({ error: "Need a valid order and a rating from 1 to 5." }, { status: 400 });
   }
 
   const comment =
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   }
 
   if (order.buyer_id !== session.user.id) {
-    return NextResponse.json({ error: "Only the buyer can review this order" }, { status: 403 });
+    return NextResponse.json({ error: "Only the buyer can leave this review." }, { status: 403 });
   }
 
   try {
@@ -67,6 +67,6 @@ export async function POST(req: Request) {
     `;
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "You may have already reviewed this order" }, { status: 400 });
+    return NextResponse.json({ error: "You’ve already reviewed this order." }, { status: 400 });
   }
 }

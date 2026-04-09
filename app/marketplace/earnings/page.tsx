@@ -49,7 +49,7 @@ export default function EarningsPage() {
         });
       })
       .catch((e) => {
-        if (!cancelled) setConnectError(e instanceof Error ? e.message : "Could not load");
+        if (!cancelled) setConnectError(e instanceof Error ? e.message : "Couldn’t load earnings.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -64,10 +64,10 @@ export default function EarningsPage() {
     try {
       const res = await fetch("/api/stripe/connect/dashboard", { method: "POST" });
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? "Could not open dashboard");
+      if (!res.ok) throw new Error(d.error ?? "Couldn’t open Stripe.");
       window.location.href = d.url;
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setOpening(false);
     }

@@ -42,7 +42,7 @@ export function ShareLinkButton({ shareTitle, shareText, className }: Props) {
   }, [shareTitle, shareText]);
 
   const label =
-    feedback === "copied" ? "Link copied" : feedback === "error" ? "Could not copy" : "Share listing";
+    feedback === "copied" ? "Link copied" : feedback === "error" ? "Copy failed" : "Share listing";
 
   return (
     <button

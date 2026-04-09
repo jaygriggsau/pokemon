@@ -9,7 +9,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const { id: idRaw } = await ctx.params;
   const id = parseInt(idRaw, 10);
   if (!Number.isFinite(id)) {
-    return NextResponse.json({ error: "Invalid listing id" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid listing ID." }, { status: 400 });
   }
 
   const rows = await sql`
@@ -63,7 +63,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const { id: idRaw } = await ctx.params;
   const id = parseInt(idRaw, 10);
   if (!Number.isFinite(id)) {
-    return NextResponse.json({ error: "Invalid listing id" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid listing ID." }, { status: 400 });
   }
 
   let body: { status?: string };
@@ -74,7 +74,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   if (body.status !== "cancelled") {
-    return NextResponse.json({ error: "Only status: cancelled is supported" }, { status: 400 });
+    return NextResponse.json({ error: "Only cancelling a listing is supported." }, { status: 400 });
   }
 
   const updated = await sql`
@@ -85,7 +85,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   `;
 
   if (!updated.length) {
-    return NextResponse.json({ error: "Listing not found or cannot be cancelled" }, { status: 400 });
+    return NextResponse.json({ error: "Listing not found or already sold/cancelled." }, { status: 400 });
   }
 
   return NextResponse.json({ ok: true });

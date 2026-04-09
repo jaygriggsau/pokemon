@@ -55,7 +55,7 @@ export default function ListingDetailPage() {
     if (typeof window === "undefined") return;
     const q = new URLSearchParams(window.location.search);
     if (q.get("checkout") === "cancelled") {
-      alert("Payment was cancelled.");
+      alert("Checkout was canceled.");
       router.replace(pathname, { scroll: false });
     }
   }, [pathname, router]);
@@ -66,7 +66,7 @@ export default function ListingDetailPage() {
       setLoading(false);
       setListing(null);
       setSellerReviews([]);
-      setError("Invalid listing link");
+      setError("That listing link isn’t valid.");
       return;
     }
     setLoading(true);
@@ -74,14 +74,14 @@ export default function ListingDetailPage() {
     fetch(`/api/marketplace/listings/${listingId}`)
       .then(async (r) => {
         const d = await r.json();
-        if (!r.ok) throw new Error(d.error ?? "Not found");
+        if (!r.ok) throw new Error(d.error ?? "Listing not found.");
         setCardCheckoutAvailable(Boolean(d.cardCheckoutAvailable));
         setMarketplacePaymentsEnabled(Boolean(d.marketplacePaymentsEnabled));
         setSellerReviews(Array.isArray(d.sellerReviews) ? d.sellerReviews : []);
         return d.listing as ListingRow;
       })
       .then(setListing)
-      .catch((e) => setError(e instanceof Error ? e.message : "Error"))
+      .catch((e) => setError(e instanceof Error ? e.message : "Something went wrong."))
       .finally(() => setLoading(false));
   }, [rawSegment, listingId]);
 
@@ -104,15 +104,15 @@ export default function ListingDetailPage() {
           body: JSON.stringify({ listingId: listing.id }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+        if (!res.ok) throw new Error(data.error ?? "Checkout didn’t start.");
         if (data.url) {
           window.location.href = data.url;
           return;
         }
-        throw new Error("No checkout URL returned");
+        throw new Error("No checkout link returned.");
       }
       const ok = window.confirm(
-        "Record this purchase without a card payment? This is only used when Stripe is not configured on the server."
+        "Record this purchase without paying by card? (Only shown when this site isn’t using Stripe checkout.)"
       );
       if (!ok) return;
       const res = await fetch("/api/marketplace/orders", {
@@ -121,10 +121,10 @@ export default function ListingDetailPage() {
         body: JSON.stringify({ listingId: listing.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Purchase failed");
+      if (!res.ok) throw new Error(data.error ?? "Purchase didn’t complete.");
       router.push(`/marketplace/orders?review=${data.orderId}`);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setBuying(false);
     }
@@ -140,10 +140,10 @@ export default function ListingDetailPage() {
         body: JSON.stringify({ listingId: listing.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not start chat");
+      if (!res.ok) throw new Error(data.error ?? "Couldn’t open messages.");
       router.push(`/marketplace/messages/${data.conversationId}`);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setOpeningChat(false);
     }
@@ -160,11 +160,11 @@ export default function ListingDetailPage() {
         body: JSON.stringify({ status: "cancelled" }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not cancel");
+      if (!res.ok) throw new Error(data.error ?? "Couldn’t cancel the listing.");
       router.refresh();
       setListing((L) => (L ? { ...L, status: "cancelled" } : null));
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setCancelling(false);
     }
@@ -335,8 +335,8 @@ export default function ListingDetailPage() {
 
           {marketplacePaymentsEnabled && canBuy && !cardCheckoutAvailable && (
             <p className="text-xs rounded-lg p-3" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
-              This seller is not ready for card checkout yet (payout setup incomplete). You can check back later or contact
-              them off-site.
+              This seller can’t take card payments yet (Stripe setup isn’t finished). Try again later or arrange payment
+              another way.
             </p>
           )}
 

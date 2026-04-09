@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { stripePaymentsEnabled } from "@/lib/stripe";
-import { isSellerSubscriptionActive, sellerSubscriptionConfigured } from "@/lib/seller-subscription";
+import { getStripe, stripePaymentsEnabled } from "@/lib/stripe";
+import { sellerSubscriptionConfigured, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
+import { getLiveSellerPlanForPrice } from "@/lib/seller-subscription-stripe-verify";
 
 export const runtime = "nodejs";
 
@@ -27,25 +28,45 @@ export async function GET() {
     });
   }
 
+  const stripe = getStripe();
+  const priceId = sellerSubscriptionPriceId();
+  if (!stripe || !priceId) {
+    return NextResponse.json({ error: "Stripe billing isn’t configured on the server." }, { status: 503 });
+  }
+
   const [row] = await sql`
-    SELECT
-      seller_subscription_status,
-      seller_subscription_current_period_end,
-      stripe_seller_customer_id
+    SELECT stripe_seller_customer_id
     FROM users
     WHERE id = ${session.user.id}
     LIMIT 1
   `;
 
-  const st = row?.seller_subscription_status as string | null;
-  const periodEnd = row?.seller_subscription_current_period_end as Date | string | null;
+  const customerId = row?.stripe_seller_customer_id as string | null;
+  if (!customerId) {
+    return NextResponse.json({
+      paymentsEnabled: true,
+      subscriptionProductConfigured: true,
+      active: false,
+      status: null as string | null,
+      currentPeriodEnd: null as string | null,
+      canManage: false,
+    });
+  }
+
+  const live = await getLiveSellerPlanForPrice(stripe, customerId, priceId);
+  if (!live.ok) {
+    return NextResponse.json(
+      { error: "Couldn’t reach Stripe to check your plan. Try again in a moment." },
+      { status: 503 }
+    );
+  }
 
   return NextResponse.json({
     paymentsEnabled: true,
     subscriptionProductConfigured: true,
-    active: isSellerSubscriptionActive(st),
-    status: st,
-    currentPeriodEnd: periodEnd ? new Date(periodEnd).toISOString() : null,
-    canManage: Boolean(row?.stripe_seller_customer_id),
+    active: live.active,
+    status: live.stripeStatus,
+    currentPeriodEnd: live.currentPeriodEnd ? live.currentPeriodEnd.toISOString() : null,
+    canManage: true,
   });
 }

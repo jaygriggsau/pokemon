@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   const listingId =
     typeof body.listingId === "number" ? body.listingId : parseInt(String(body.listingId), 10);
   if (!Number.isFinite(listingId)) {
-    return NextResponse.json({ error: "Invalid listing" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid or missing listing." }, { status: 400 });
   }
 
   const buyerId = session.user.id;
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
   if (listing.status !== "active") {
     return NextResponse.json(
-      { error: "This listing is not active. You can only start a chat on active listings." },
+      { error: "You can only message sellers on active listings." },
       { status: 400 }
     );
   }
@@ -124,5 +124,5 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ error: "Could not create conversation" }, { status: 500 });
+  return NextResponse.json({ error: "Couldn’t start the conversation. Try again." }, { status: 500 });
 }

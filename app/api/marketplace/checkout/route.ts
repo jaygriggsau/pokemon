@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.json({ error: "Card checkout is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Card checkout isn’t available (Stripe not configured)." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const listingId =
     typeof body.listingId === "number" ? body.listingId : parseInt(String(body.listingId), 10);
   if (!Number.isFinite(listingId)) {
-    return NextResponse.json({ error: "Invalid listing" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid or missing listing." }, { status: 400 });
   }
 
   const buyerId = session.user.id;
@@ -63,14 +63,14 @@ export async function POST(req: Request) {
     | undefined;
 
   if (!listing || listing.status !== "active") {
-    return NextResponse.json({ error: "This listing is not available for purchase." }, { status: 400 });
+    return NextResponse.json({ error: "This listing isn’t for sale anymore." }, { status: 400 });
   }
   if (listing.seller_id === buyerId) {
     return NextResponse.json({ error: "You cannot buy your own listing." }, { status: 400 });
   }
   if (!listing.stripe_connect_account_id) {
     return NextResponse.json(
-      { error: "The seller has not finished payout setup yet." },
+      { error: "The seller hasn’t finished payment setup yet." },
       { status: 400 }
     );
   }
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   const acc = await stripe.accounts.retrieve(listing.stripe_connect_account_id);
   if (!acc.charges_enabled) {
     return NextResponse.json(
-      { error: "The seller cannot accept card payments yet. Try again later." },
+      { error: "The seller can’t take card payments yet." },
       { status: 400 }
     );
   }
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
   if (totalCents < minMinor) {
     return NextResponse.json(
       {
-        error: `Order total is below the minimum charge Stripe allows for ${currencyUpper}.`,
+        error: `Total is below Stripe’s minimum for ${currencyUpper}.`,
       },
       { status: 400 }
     );
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
   const fee = platformFeeCents(totalCents);
   if (fee >= totalCents) {
-    return NextResponse.json({ error: "Order amount is too small after fees." }, { status: 400 });
+    return NextResponse.json({ error: "Order total is too small after the platform fee." }, { status: 400 });
   }
 
   const origin = appOrigin();
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
   });
 
   if (!checkout.url) {
-    return NextResponse.json({ error: "Could not start checkout." }, { status: 500 });
+    return NextResponse.json({ error: "Couldn’t start checkout. Try again." }, { status: 500 });
   }
 
   return NextResponse.json({ url: checkout.url });

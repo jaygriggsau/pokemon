@@ -19,20 +19,20 @@ function ReturnContent() {
       return;
     }
     if (!sessionId) {
-      setErr("Missing checkout session.");
+      setErr("Missing checkout reference.");
       return;
     }
     fetch(`/api/marketplace/checkout/verify?session_id=${encodeURIComponent(sessionId)}`)
       .then(async (r) => {
         const d = await r.json();
-        if (!r.ok) throw new Error(d.error ?? "Could not verify payment");
+        if (!r.ok) throw new Error(d.error ?? "Couldn’t verify payment.");
         if (d.paymentStatus === "paid") {
-          setMsg("Payment successful. Your order will show in My orders once processing finishes (usually within a minute).");
+          setMsg("Payment received. Your order should appear in My orders within about a minute.");
         } else {
           setMsg(`Payment status: ${d.paymentStatus ?? "unknown"}. Check My orders for updates.`);
         }
       })
-      .catch((e) => setErr(e instanceof Error ? e.message : "Verification failed"));
+      .catch((e) => setErr(e instanceof Error ? e.message : "Couldn’t verify checkout."));
   }, [sessionId, status]);
 
   if (status === "loading" || (!err && !msg && status === "authenticated")) {

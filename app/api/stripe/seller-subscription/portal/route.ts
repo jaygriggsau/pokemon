@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function POST() {
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.json({ error: "Stripe is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Stripe isn’t configured on this server." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export async function POST() {
   const customerId = user?.stripe_seller_customer_id as string | null;
   if (!customerId) {
     return NextResponse.json(
-      { error: "No billing account found. Subscribe first." },
+      { error: "Subscribe first—no billing profile on file yet." },
       { status: 400 }
     );
   }

@@ -91,7 +91,7 @@ export default function HomePage() {
       setCards(data.cards ?? []);
       setSearched(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Search failed");
+      setError(e instanceof Error ? e.message : "Search didn’t work. Try again.");
     } finally {
       setLoading(false);
     }

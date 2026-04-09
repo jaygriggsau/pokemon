@@ -361,7 +361,7 @@ function SellForm() {
     try {
       setFrontPreview(await compressImageFile(f));
     } catch {
-      setError("Could not process front image");
+      setError("Couldn’t read the front photo. Try another image.");
     }
   }
 
@@ -372,7 +372,7 @@ function SellForm() {
     try {
       setBackPreview(await compressImageFile(f));
     } catch {
-      setError("Could not process back image");
+      setError("Couldn’t read the back photo. Try another image.");
     }
   }
 
@@ -380,10 +380,10 @@ function SellForm() {
     try {
       const res = await fetch("/api/stripe/connect/onboard", { method: "POST" });
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? "Could not start onboarding");
+      if (!res.ok) throw new Error(d.error ?? "Couldn’t open Stripe setup.");
       if (d.url) window.location.href = d.url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Onboarding failed");
+      setError(err instanceof Error ? err.message : "Stripe setup failed.");
     }
   }
 
@@ -395,19 +395,19 @@ function SellForm() {
       sellerSub?.subscriptionProductConfigured &&
       !sellerSub.active
     ) {
-      setError("Activate your seller account ($5/month) before publishing — open Seller account.");
+      setError("Start your seller plan on the Seller account page before publishing.");
       return;
     }
     if (stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled) {
-      setError("Finish Stripe seller onboarding before publishing.");
+      setError("Finish Stripe Connect on this page before publishing.");
       return;
     }
     if (!selected) {
-      setError("Select a card from search");
+      setError("Choose a card from the search results.");
       return;
     }
     if (!frontPreview || !backPreview) {
-      setError("Upload clear photos of the front and back");
+      setError("Add front and back photos.");
       return;
     }
     const priceCents = parsePriceInputToMinorUnits(price, currency);
@@ -421,7 +421,7 @@ function SellForm() {
     }
     const postageCents = parsePostageInputToMinorUnits(postage, currency);
     if (postageCents === null) {
-      setError("Enter valid postage (0 or more)");
+      setError("Enter postage (0 or more).");
       return;
     }
 
@@ -448,7 +448,7 @@ function SellForm() {
         throw new Error(parts.length ? parts.join(" — ") : "Image upload failed");
       }
       if (!uploadData.photoFrontUrl || !uploadData.photoBackUrl) {
-        throw new Error("Upload succeeded but photo URLs were missing. Try again.");
+        throw new Error("Upload finished but image links were missing. Try again.");
       }
 
       const res = await fetch("/api/marketplace/listings", {
@@ -469,11 +469,12 @@ function SellForm() {
         }),
       });
       const data = await readResponseJson<{ error?: string; id?: number }>(res);
-      if (!res.ok) throw new Error(data.error ?? "Failed to create listing");
-      if (typeof data.id !== "number") throw new Error("Listing was created but the response was incomplete. Try refreshing the marketplace.");
+      if (!res.ok) throw new Error(data.error ?? "Couldn’t publish the listing.");
+      if (typeof data.id !== "number")
+        throw new Error("Listing may have been created—refresh the marketplace to check.");
       router.push(listingSharePath({ id: data.id, card_name: selected.name }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
@@ -512,10 +513,9 @@ function SellForm() {
             className="rounded-xl p-4 flex flex-col gap-3"
             style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
           >
-            <p className="text-sm font-medium">Seller account activation ($5 / month)</p>
+            <p className="text-sm font-medium">Seller plan ($5 / month)</p>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
-              Subscribe once to unlock publishing listings. This is a flat monthly platform fee, separate from Stripe Connect
-              payouts and per-sale fees.
+              Subscribe to publish listings. Separate from Stripe Connect payouts and per-sale fees.
             </p>
             <Link href="/marketplace/sell/seller-account" className="btn-primary text-sm text-center">
               Activate seller account
@@ -544,10 +544,10 @@ function SellForm() {
           className="rounded-xl p-4 flex flex-col gap-3"
           style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
         >
-          <p className="text-sm font-medium">Set up payouts to sell</p>
+          <p className="text-sm font-medium">Connect payouts</p>
           <p className="text-xs" style={{ color: "var(--muted)" }}>
-            This marketplace uses Stripe. Connect once so you can receive money when your cards sell. Withdraw to your bank
-            from the Stripe seller dashboard.
+            Link Stripe once so you can receive card payments when cards sell. Withdraw to your bank from your Stripe
+            dashboard.
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-primary text-sm" onClick={startPayoutSetup}>
@@ -562,8 +562,7 @@ function SellForm() {
 
       {!payoutLoading && stripePayout?.paymentsEnabled && stripePayout.chargesEnabled && (
         <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
-          Seller payouts connected. A platform fee (see site terms) is deducted from each sale before funds reach your Stripe
-          balance.
+          Payouts connected. A platform fee applies on each sale before money reaches your Stripe balance.
         </p>
       )}
 

@@ -51,7 +51,7 @@ function SellerAccountContent() {
         });
       })
       .catch(() => {
-        setLoadError("Could not load subscription status.");
+        setLoadError("Couldn’t load seller plan status.");
         setState(null);
       })
       .finally(() => setLoading(false));
@@ -72,11 +72,11 @@ function SellerAccountContent() {
           load();
           return;
         }
-        throw new Error(d.error ?? "Checkout failed");
+        throw new Error(d.error ?? "Checkout didn’t start.");
       }
       if (d.url) window.location.href = d.url;
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setSubscribing(false);
     }
@@ -87,10 +87,10 @@ function SellerAccountContent() {
     try {
       const res = await fetch("/api/stripe/seller-subscription/portal", { method: "POST" });
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? "Could not open billing portal");
+      if (!res.ok) throw new Error(d.error ?? "Couldn’t open billing.");
       if (d.url) window.location.href = d.url;
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
+      alert(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setPortalLoading(false);
     }
@@ -134,30 +134,29 @@ function SellerAccountContent() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold mt-2">Seller account activation</h1>
         <p className="text-sm mt-2" style={{ color: "var(--muted)" }}>
-          Selling on this marketplace requires an active <strong>$5 per month</strong> seller plan. This is a flat platform
-          fee to list your cards—it is separate from{" "}
+          An active <strong>$5/month</strong> seller plan is required to publish listings. That fee is separate from{" "}
           <Link href="/marketplace/earnings" className="underline" style={{ color: "var(--text)" }}>
-            Stripe Connect payouts
+            Stripe Connect
           </Link>{" "}
-          (how buyers pay you) and any per-sale application fee.
+          (where buyer payments land) and any fee taken on each sale.
         </p>
       </div>
 
       {subSuccess && (
         <p className="text-sm rounded-lg px-3 py-2" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
-          Payment received. If your status still shows inactive, wait a few seconds and refresh—webhooks can take a moment.
+          If your plan still looks inactive, wait a few seconds and refresh—we confirm it directly with Stripe.
         </p>
       )}
       {subCanceled && (
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Checkout was canceled. You can try again when you are ready.
+          Checkout was canceled. You can subscribe whenever you’re ready.
         </p>
       )}
 
       {!configured && (
         <p className="text-sm rounded-lg p-4" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
-          Seller subscriptions are not configured on this server yet (missing price ID). You can still publish listings in
-          this environment.
+          Seller plans aren’t configured here (no subscription price in settings). You can still publish listings in this
+          environment.
         </p>
       )}
 
@@ -187,8 +186,7 @@ function SellerAccountContent() {
       {configured && !state.active && (
         <div className="flex flex-col gap-3">
           <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Subscribe with a card to unlock publishing listings. You will be charged monthly until you cancel in the
-            billing portal.
+            Subscribe with a card to publish listings. You’re billed monthly until you cancel in billing.
           </p>
           <button type="button" className="btn-primary w-fit" disabled={subscribing} onClick={startSubscribe}>
             {subscribing ? "Redirecting…" : "Subscribe — $5 / month"}
@@ -197,7 +195,7 @@ function SellerAccountContent() {
       )}
 
       <div className="text-xs pt-4 border-t" style={{ color: "var(--muted)", borderColor: "var(--border)" }}>
-        <p className="mb-2">After subscribing you still need to complete Stripe Connect on the Sell page to receive card payments from buyers.</p>
+        <p className="mb-2">After subscribing, finish Stripe Connect on the Sell page so buyers can pay you by card.</p>
         <Link href="/marketplace/sell" className="underline" style={{ color: "var(--eu-color)" }}>
           Back to sell flow →
         </Link>

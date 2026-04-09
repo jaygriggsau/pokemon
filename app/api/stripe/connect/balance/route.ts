@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function GET() {
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.json({ error: "Stripe is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Stripe isn’t configured on this server." }, { status: 503 });
   }
 
   const session = await getServerSession(authOptions);
@@ -22,7 +22,7 @@ export async function GET() {
   `;
   const accountId = row?.stripe_connect_account_id as string | null;
   if (!accountId) {
-    return NextResponse.json({ error: "No seller account connected." }, { status: 400 });
+    return NextResponse.json({ error: "No Stripe seller account linked yet." }, { status: 400 });
   }
 
   const balance = await stripe.balance.retrieve({}, { stripeAccount: accountId });

@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     const text = await res.text();
     console.error("TCGGO error:", res.status, text);
     return NextResponse.json(
-      { error: "Failed to fetch cards from TCGGO API." },
+      { error: "Card search is temporarily unavailable." },
       { status: res.status }
     );
   }
