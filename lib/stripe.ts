@@ -27,3 +27,21 @@ export function appOrigin(): string {
   const u = process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "");
   return u || "http://localhost:3000";
 }
+
+/** Stripe metadata key for our user id on Checkout, Connect, subscriptions. */
+export const STRIPE_APP_USER_METADATA_KEY = "pokemove_user_id" as const;
+
+const STRIPE_APP_USER_METADATA_KEY_LEGACY = "pokeprice_user_id" as const;
+
+/** Reads app user id from Stripe object metadata; supports legacy key after rebrand. */
+export function stripeAppUserIdFromMetadata(
+  meta: Stripe.Metadata | Record<string, string | undefined> | null | undefined
+): string | undefined {
+  if (!meta || typeof meta !== "object") return undefined;
+  const m = meta as Record<string, unknown>;
+  const a = m[STRIPE_APP_USER_METADATA_KEY];
+  const b = m[STRIPE_APP_USER_METADATA_KEY_LEGACY];
+  if (typeof a === "string" && a.trim()) return a;
+  if (typeof b === "string" && b.trim()) return b;
+  return undefined;
+}

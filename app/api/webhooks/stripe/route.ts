@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { sql } from "@/lib/db";
-import { getStripe } from "@/lib/stripe";
+import { getStripe, stripeAppUserIdFromMetadata } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -19,9 +19,9 @@ function subscriptionCustomerId(sub: Stripe.Subscription): string {
 
 async function handleSellerSubscriptionCheckout(stripe: Stripe, session: Stripe.Checkout.Session) {
   if (session.mode !== "subscription") return;
-  const userId = session.metadata?.pokeprice_user_id;
-  if (!userId || typeof userId !== "string") {
-    console.error("[stripe webhook] subscription checkout missing pokeprice_user_id", session.id);
+  const userId = stripeAppUserIdFromMetadata(session.metadata);
+  if (!userId) {
+    console.error("[stripe webhook] subscription checkout missing pokemove_user_id", session.id);
     return;
   }
 
@@ -51,8 +51,8 @@ async function syncUserSubscriptionFromStripe(sub: Stripe.Subscription) {
   const customerId = subscriptionCustomerId(sub);
   const periodEnd = subscriptionPeriodEnd(sub);
 
-  let userId = sub.metadata?.pokeprice_user_id;
-  if (!userId || typeof userId !== "string") {
+  let userId = stripeAppUserIdFromMetadata(sub.metadata);
+  if (!userId) {
     const byCust = await sql`
       SELECT id FROM users WHERE stripe_seller_customer_id = ${customerId} LIMIT 1
     `;

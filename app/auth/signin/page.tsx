@@ -46,7 +46,7 @@ function SignInForm() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Sign in to access your watchlist
+          Sign in to pokemove — watchlist &amp; marketplace
         </p>
       </div>
 

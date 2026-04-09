@@ -11,8 +11,9 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "pokePrice — Pokémon Card Price Tracker",
-  description: "Search and track real-time Pokémon TCG prices from EU Market (Cardmarket) and US Market (TCGPlayer).",
+  title: "pokemove — Pokémon TCG prices & marketplace",
+  description:
+    "Search Pokémon cards, compare EU (Cardmarket) and US (TCGPlayer) prices in your currency, watchlist favorites, and buy or sell on the marketplace.",
 };
 
 export const viewport = {

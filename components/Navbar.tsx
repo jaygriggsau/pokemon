@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandWordmark } from "@/components/BrandWordmark";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useCurrency, CURRENCIES, type CurrencyCode } from "@/lib/currency-context";
@@ -125,16 +126,15 @@ export function Navbar() {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 14,
+                  fontSize: 11,
                   fontWeight: 800,
                   flexShrink: 0,
+                  letterSpacing: "-0.02em",
                 }}
               >
-                P
+                PM
               </span>
-              <span style={{ color: "var(--text)" }}>
-                poke<span style={{ color: "var(--red)" }}>Price</span>
-              </span>
+              <BrandWordmark className="text-base sm:text-lg" />
             </Link>
 
             <div className="flex items-center gap-2 sm:hidden shrink-0">

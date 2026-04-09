@@ -1,6 +1,6 @@
-# pokePrice
+# pokemove
 
-Real-time Pokémon TCG price tracker. Search cards, compare EU (Cardmarket) and US (TCGPlayer) prices side by side, and keep a personal watchlist.
+Pokémon TCG prices and marketplace. Search cards, compare EU (Cardmarket) and US (TCGPlayer) prices side by side, keep a watchlist, and buy or sell listings.
 
 ## Features
 

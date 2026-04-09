@@ -61,7 +61,7 @@ export default function SignUpPage() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Track your Pokémon card prices for free
+          Join pokemove — prices, watchlist &amp; marketplace
         </p>
       </div>
 

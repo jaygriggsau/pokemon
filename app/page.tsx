@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { CardItem } from "@/components/CardItem";
+import { BrandWordmark } from "@/components/BrandWordmark";
 import type { TcgCard } from "@/lib/tcggo";
 
 const SUGGESTIONS = ["Charizard ex", "Pikachu VMAX", "Mewtwo", "Lugia", "Umbreon VMAX", "Giratina VSTAR"];
@@ -48,12 +49,15 @@ export default function HomePage() {
       {/* Hero */}
       {!searched && (
         <div className="text-center pt-4 pb-1 sm:pt-8 sm:pb-2 px-1">
-          <h1 className="text-[1.65rem] leading-tight sm:text-4xl font-black tracking-tight mb-2 sm:mb-3">
-            <span style={{ color: "var(--text)" }}>Pokémon Card</span>{" "}
-            <span style={{ color: "var(--red)" }}>Prices</span>
+          <h1 className="flex flex-col items-center gap-1 mb-2 sm:mb-3 text-center">
+            <BrandWordmark className="text-[1.65rem] sm:text-4xl" />
+            <span className="text-[1.35rem] leading-tight sm:text-2xl font-black tracking-tight block">
+              <span style={{ color: "var(--text)" }}>Pokémon TCG</span>{" "}
+              <span style={{ color: "var(--red)" }}>prices &amp; marketplace</span>
+            </span>
           </h1>
           <p className="text-sm sm:text-base max-w-md mx-auto px-2" style={{ color: "var(--muted)" }}>
-            EU Market &amp; US Market prices in your currency, one search.
+            EU &amp; US market data in your currency — search, watchlist, and trade.
           </p>
         </div>
       )}

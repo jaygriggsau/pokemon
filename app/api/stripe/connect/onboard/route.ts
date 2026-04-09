@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { appOrigin, getStripe } from "@/lib/stripe";
+import { appOrigin, getStripe, STRIPE_APP_USER_METADATA_KEY } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -40,7 +40,7 @@ export async function POST() {
         card_payments: { requested: true },
         transfers: { requested: true },
       },
-      metadata: { pokeprice_user_id: uid },
+      metadata: { [STRIPE_APP_USER_METADATA_KEY]: uid },
     });
     accountId = account.id;
     await sql`

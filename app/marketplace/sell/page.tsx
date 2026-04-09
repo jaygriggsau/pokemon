@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense, type CSSProperties } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -15,6 +15,220 @@ import { LISTING_CONDITIONS, LISTING_CURRENCIES, type ListingCurrency } from "@/
 import { compressImageFile } from "@/lib/image-compress-client";
 import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
+
+function PlusIcon({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <svg
+      className={className}
+      style={style}
+      width="64"
+      height="64"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function CameraIcon({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <svg
+      className={className}
+      style={style}
+      width="40"
+      height="40"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.35"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
+
+function PhotoUploadZone({
+  id,
+  label,
+  preview,
+  onPick,
+  dragLabel,
+}: {
+  id: string;
+  label: string;
+  preview: string | null;
+  onPick: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  dragLabel: string;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  const galleryInputId = id;
+  const cameraInputId = `${id}-camera`;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    void onPick(e);
+    e.target.value = "";
+    const siblingId = e.target.id === cameraInputId ? galleryInputId : cameraInputId;
+    const sib = document.getElementById(siblingId) as HTMLInputElement | null;
+    if (sib) sib.value = "";
+  }
+
+  const actionBtnClass =
+    "inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-opacity border touch-manipulation flex-1 min-w-0 sm:min-w-[120px]";
+
+  return (
+    <div className="flex flex-col gap-2 min-w-0">
+      <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: "var(--muted)" }}>
+        {label}
+      </span>
+      <div className="relative rounded-xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[var(--red)] focus-within:ring-offset-[var(--surface)]">
+        <input
+          id={galleryInputId}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          className="sr-only"
+        />
+        <input
+          id={cameraInputId}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="sr-only"
+          aria-label={`Take a photo with the camera for ${label}`}
+        />
+        <div
+          className="relative flex flex-col items-center justify-center gap-3 rounded-xl overflow-hidden transition-[border-color,background-color,box-shadow] min-h-[188px] sm:min-h-[220px] px-3 py-5 sm:px-4 sm:py-6 border-2 border-dashed"
+          style={{
+            borderColor: dragOver ? "var(--red)" : preview ? "var(--border)" : "color-mix(in srgb, var(--muted) 45%, transparent)",
+            background: dragOver ? "color-mix(in srgb, var(--red) 8%, var(--surface))" : "var(--surface-raised)",
+            boxShadow: dragOver ? "0 0 0 3px color-mix(in srgb, var(--red) 25%, transparent)" : undefined,
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(true);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOver(false);
+            const f = e.dataTransfer.files?.[0];
+            if (!f || !/^image\/(jpeg|png|webp)$/i.test(f.type)) return;
+            const input = document.getElementById(galleryInputId) as HTMLInputElement | null;
+            if (!input) return;
+            const dt = new DataTransfer();
+            dt.items.add(f);
+            input.files = dt.files;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+          }}
+        >
+          {preview ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={preview}
+                alt=""
+                className="absolute inset-0 z-0 w-full h-full object-contain p-2"
+                style={{ background: "var(--surface)" }}
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap gap-2 justify-center py-2.5 px-3"
+                style={{
+                  background: "linear-gradient(to top, color-mix(in srgb, var(--surface) 94%, black), transparent)",
+                }}
+              >
+                <label
+                  htmlFor={cameraInputId}
+                  className={actionBtnClass}
+                  style={{
+                    background: "var(--red)",
+                    color: "white",
+                    borderColor: "transparent",
+                  }}
+                >
+                  <CameraIcon className="shrink-0 w-5 h-5" style={{ color: "white" }} />
+                  Camera
+                </label>
+                <label
+                  htmlFor={galleryInputId}
+                  className={actionBtnClass}
+                  style={{
+                    background: "color-mix(in srgb, var(--surface) 88%, var(--text))",
+                    color: "var(--text)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  Replace
+                </label>
+              </div>
+            </>
+          ) : (
+            <>
+              <PlusIcon
+                className="shrink-0 pointer-events-none"
+                style={{
+                  color: dragOver ? "var(--red)" : "color-mix(in srgb, var(--muted) 85%, var(--text))",
+                }}
+              />
+              <span className="text-sm font-semibold text-center pointer-events-none" style={{ color: "var(--text)" }}>
+                Add photo
+              </span>
+              <span className="text-xs text-center max-w-[240px] leading-snug pointer-events-none" style={{ color: "var(--muted)" }}>
+                {dragLabel}
+              </span>
+              <div className="flex flex-col sm:flex-row w-full max-w-sm gap-2 mt-1">
+                <label
+                  htmlFor={cameraInputId}
+                  className={actionBtnClass}
+                  style={{
+                    background: "var(--red)",
+                    color: "white",
+                    borderColor: "transparent",
+                  }}
+                >
+                  <CameraIcon className="shrink-0 w-6 h-6 sm:w-7 sm:h-7" style={{ color: "white" }} />
+                  Use camera
+                </label>
+                <label
+                  htmlFor={galleryInputId}
+                  className={actionBtnClass}
+                  style={{
+                    background: "color-mix(in srgb, var(--surface) 92%, var(--text))",
+                    color: "var(--text)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  <PlusIcon className="w-7 h-7 sm:w-8 sm:h-8 shrink-0" style={{ color: "var(--red)" }} />
+                  Upload file
+                </label>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SellForm() {
   const { data: session, status } = useSession();
@@ -498,27 +712,21 @@ function SellForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold block mb-2" style={{ color: "var(--muted)" }}>
-                Card front photo
-              </label>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFront} className="text-sm w-full" />
-              {frontPreview && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={frontPreview} alt="Front preview" className="mt-2 rounded-lg w-full max-h-48 object-contain" style={{ background: "var(--surface)" }} />
-              )}
-            </div>
-            <div>
-              <label className="text-xs font-semibold block mb-2" style={{ color: "var(--muted)" }}>
-                Card back photo
-              </label>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickBack} className="text-sm w-full" />
-              {backPreview && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={backPreview} alt="Back preview" className="mt-2 rounded-lg w-full max-h-48 object-contain" style={{ background: "var(--surface)" }} />
-              )}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+            <PhotoUploadZone
+              id="sell-photo-front"
+              label="Card front"
+              preview={frontPreview}
+              onPick={onPickFront}
+              dragLabel="Camera, upload, or drop — JPG, PNG, or WebP"
+            />
+            <PhotoUploadZone
+              id="sell-photo-back"
+              label="Card back"
+              preview={backPreview}
+              onPick={onPickBack}
+              dragLabel="Camera, upload, or drop — JPG, PNG, or WebP"
+            />
           </div>
 
           {error && (

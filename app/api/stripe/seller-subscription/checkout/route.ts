@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { appOrigin, getStripe } from "@/lib/stripe";
+import { appOrigin, getStripe, STRIPE_APP_USER_METADATA_KEY } from "@/lib/stripe";
 import { isSellerSubscriptionActive, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
 
 export const runtime = "nodejs";
@@ -55,9 +55,9 @@ export async function POST() {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${origin}/marketplace/sell/seller-account?sub_success=1`,
     cancel_url: `${origin}/marketplace/sell/seller-account?sub_canceled=1`,
-    metadata: { pokeprice_user_id: uid },
+    metadata: { [STRIPE_APP_USER_METADATA_KEY]: uid },
     subscription_data: {
-      metadata: { pokeprice_user_id: uid },
+      metadata: { [STRIPE_APP_USER_METADATA_KEY]: uid },
     },
     ...(customerId ? { customer: customerId } : { customer_email: email! }),
   });

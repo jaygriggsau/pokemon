@@ -1,4 +1,4 @@
--- pokePrice database schema
+-- pokemove database schema
 -- Run this if setting up a new Neon / PostgreSQL database
 
 CREATE TABLE IF NOT EXISTS users (
