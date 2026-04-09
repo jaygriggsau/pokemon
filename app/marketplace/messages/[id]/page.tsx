@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { MAX_MESSAGE_CHARS } from "@/lib/marketplace-messages";
 import { formatDateTime } from "@/lib/format-date";
+import { listingSharePath } from "@/lib/listing-share";
 
 type Meta = {
   conversationId: number;
@@ -170,7 +171,11 @@ export default function MessageThreadPage() {
             With {meta.otherPartyName} · you are the {meta.role}
             {meta.listingStatus !== "active" ? ` · listing ${meta.listingStatus}` : ""}
           </p>
-          <Link href={`/marketplace/${meta.listingId}`} className="text-xs underline w-fit mt-1" style={{ color: "var(--eu-color)" }}>
+          <Link
+            href={listingSharePath({ id: meta.listingId, card_name: meta.cardName })}
+            className="text-xs underline w-fit mt-1"
+            style={{ color: "var(--eu-color)" }}
+          >
             View listing →
           </Link>
         </div>

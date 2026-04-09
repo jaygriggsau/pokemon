@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { formatListingMinorAmount } from "@/lib/listing-money";
 import type { ListingCurrency } from "@/lib/marketplace";
 import { SellerRating } from "@/components/SellerRating";
 import { SellerReviewsSection } from "@/components/SellerReviewsSection";
 import type { PublicSellerReview } from "@/lib/seller-reviews-types";
+import { listingSharePath, listingShareSegment, parseListingUrlSegment } from "@/lib/listing-share";
+import { ShareLinkButton } from "@/components/ShareLinkButton";
 
 type ListingRow = {
   id: number;
@@ -34,6 +36,7 @@ type ListingRow = {
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const [listing, setListing] = useState<ListingRow | null>(null);
   const [sellerReviews, setSellerReviews] = useState<PublicSellerReview[]>([]);
@@ -45,20 +48,30 @@ export default function ListingDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [openingChat, setOpeningChat] = useState(false);
 
-  const id = params?.id;
+  const rawSegment = params?.id;
+  const listingId = rawSegment ? parseListingUrlSegment(rawSegment) : null;
 
   useEffect(() => {
-    if (typeof window === "undefined" || !id) return;
+    if (typeof window === "undefined") return;
     const q = new URLSearchParams(window.location.search);
     if (q.get("checkout") === "cancelled") {
       alert("Payment was cancelled.");
-      router.replace(`/marketplace/${id}`, { scroll: false });
+      router.replace(pathname, { scroll: false });
     }
-  }, [id, router]);
+  }, [pathname, router]);
 
   useEffect(() => {
-    if (!id) return;
-    fetch(`/api/marketplace/listings/${id}`)
+    if (!rawSegment) return;
+    if (listingId == null) {
+      setLoading(false);
+      setListing(null);
+      setSellerReviews([]);
+      setError("Invalid listing link");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetch(`/api/marketplace/listings/${listingId}`)
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ?? "Not found");
@@ -70,7 +83,15 @@ export default function ListingDetailPage() {
       .then(setListing)
       .catch((e) => setError(e instanceof Error ? e.message : "Error"))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [rawSegment, listingId]);
+
+  useEffect(() => {
+    if (!listing || !rawSegment) return;
+    const canonical = listingShareSegment(listing);
+    if (rawSegment !== canonical) {
+      router.replace(listingSharePath(listing), { scroll: false });
+    }
+  }, [listing, rawSegment, router]);
 
   async function buy() {
     if (!listing || !session) return;
@@ -283,6 +304,11 @@ export default function ListingDetailPage() {
           >
             View price chart &amp; market data for this card →
           </Link>
+
+          <ShareLinkButton
+            shareTitle={`${listing.card_name} on pokemove`}
+            shareText={`${item} · ${listing.condition_grade}${listing.set_name ? ` · ${listing.set_name}` : ""}`}
+          />
 
           {session && !isSeller && listing.status === "active" && (
             <button

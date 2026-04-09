@@ -4,6 +4,7 @@ import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { Navbar } from "@/components/Navbar";
 import { CurrencyProvider } from "@/lib/currency-context";
+import { getMetadataBase } from "@/lib/site-url";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -11,6 +12,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: "pokemove — Pokémon TCG prices & marketplace",
   description:
     "Search Pokémon cards, compare EU (Cardmarket) and US (TCGPlayer) prices in your currency, watchlist favorites, and buy or sell on the marketplace.",

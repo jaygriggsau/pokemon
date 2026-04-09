@@ -5,6 +5,7 @@ import Image from "next/image";
 import { formatListingMinorAmount } from "@/lib/listing-money";
 import type { ListingCurrency } from "@/lib/marketplace";
 import { SellerRating } from "@/components/SellerRating";
+import { listingSharePath } from "@/lib/listing-share";
 
 export type ListingCardData = {
   id: number;
@@ -29,7 +30,7 @@ export function MarketplaceListingCard({ listing }: { listing: ListingCardData }
 
   return (
     <Link
-      href={`/marketplace/${listing.id}`}
+      href={listingSharePath(listing)}
       className="card-surface flex flex-col overflow-hidden min-w-0 transition-transform hover:scale-[1.01] active:scale-[0.99]"
     >
       <div

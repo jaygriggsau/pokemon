@@ -14,6 +14,7 @@ import {
 import { LISTING_CONDITIONS, LISTING_CURRENCIES, type ListingCurrency } from "@/lib/marketplace";
 import { compressImageFile } from "@/lib/image-compress-client";
 import { formatDate } from "@/lib/format-date";
+import { listingSharePath } from "@/lib/listing-share";
 import { readResponseJson } from "@/lib/read-response-json";
 import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
@@ -470,7 +471,7 @@ function SellForm() {
       const data = await readResponseJson<{ error?: string; id?: number }>(res);
       if (!res.ok) throw new Error(data.error ?? "Failed to create listing");
       if (typeof data.id !== "number") throw new Error("Listing was created but the response was incomplete. Try refreshing the marketplace.");
-      router.push(`/marketplace/${data.id}`);
+      router.push(listingSharePath({ id: data.id, card_name: selected.name }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
     } finally {

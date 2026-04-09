@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatListingMinorAmount } from "@/lib/listing-money";
 import type { ListingCurrency } from "@/lib/marketplace";
 import { formatDateTime } from "@/lib/format-date";
+import { listingSharePath } from "@/lib/listing-share";
 
 type OrderRow = {
   id: number;
@@ -229,7 +230,7 @@ function OrdersContent() {
                   <Link href={`/cards/${o.card_id}`} className="btn-ghost text-xs">
                     Price chart
                   </Link>
-                  <Link href={`/marketplace/${o.listing_id}`} className="btn-ghost text-xs">
+                  <Link href={listingSharePath({ id: o.listing_id, card_name: o.card_name })} className="btn-ghost text-xs">
                     Listing
                   </Link>
                 </div>
