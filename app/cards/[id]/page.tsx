@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useCurrency } from "@/lib/currency-context";
 import { PriceChart } from "@/components/PriceChart";
 import { buildPriceHistory, artistName, type TcgCard, type GradedPrices } from "@/lib/tcggo";
+import { formatMonthYear } from "@/lib/format-date";
 
 // ── Type colour map ────────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
@@ -213,7 +214,7 @@ export default function CardDetailPage() {
               { label: "Set",       value: card.episode?.name },
               { label: "Code",      value: card.episode?.code },
               { label: "Series",    value: card.episode?.series?.name },
-              { label: "Released",  value: card.episode?.released_at ? new Date(card.episode.released_at).toLocaleDateString("en-US", { year: "numeric", month: "long" }) : undefined },
+              { label: "Released",  value: card.episode?.released_at ? formatMonthYear(card.episode.released_at) : undefined },
               { label: "Cards",     value: card.episode?.cards_total ? `${card.episode.cards_printed_total ?? card.episode.cards_total} / ${card.episode.cards_total} total` : undefined },
               { label: "Artist",    value: artistName(card.artist) },
               { label: "Reg. Mark", value: (card as unknown as { regulation_mark?: string }).regulation_mark },

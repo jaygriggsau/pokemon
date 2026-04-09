@@ -13,6 +13,7 @@ import {
 } from "@/lib/listing-money";
 import { LISTING_CONDITIONS, LISTING_CURRENCIES, type ListingCurrency } from "@/lib/marketplace";
 import { compressImageFile } from "@/lib/image-compress-client";
+import { formatDate } from "@/lib/format-date";
 import { readResponseJson } from "@/lib/read-response-json";
 import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
@@ -528,7 +529,7 @@ function SellForm() {
           <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
             Seller plan active
             {sellerSub.currentPeriodEnd
-              ? ` · Renews or ends ${new Date(sellerSub.currentPeriodEnd).toLocaleDateString()}`
+              ? ` · Renews or ends ${formatDate(sellerSub.currentPeriodEnd)}`
               : ""}
             .{" "}
             <Link href="/marketplace/sell/seller-account" className="underline" style={{ color: "var(--text)" }}>

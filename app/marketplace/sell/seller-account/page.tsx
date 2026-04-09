@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/format-date";
 
 function SellerAccountContent() {
   const { data: session, status } = useSession();
@@ -171,7 +172,7 @@ function SellerAccountContent() {
             {state.currentPeriodEnd && (
               <>
                 {" "}
-                · Current period ends {new Date(state.currentPeriodEnd).toLocaleString()}
+                · Current period ends {formatDate(state.currentPeriodEnd)}
               </>
             )}
           </p>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { MAX_MESSAGE_CHARS } from "@/lib/marketplace-messages";
+import { formatDateTime } from "@/lib/format-date";
 
 type Meta = {
   conversationId: number;
@@ -206,7 +207,7 @@ export default function MessageThreadPage() {
                     className="text-[10px] mt-1 opacity-70"
                     style={{ color: mine ? "rgba(255,255,255,0.85)" : "var(--muted)" }}
                   >
-                    {new Date(m.createdAt).toLocaleString()}
+                    {formatDateTime(m.createdAt)}
                   </p>
                 </div>
               </div>

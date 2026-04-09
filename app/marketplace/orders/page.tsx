@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatListingMinorAmount } from "@/lib/listing-money";
 import type { ListingCurrency } from "@/lib/marketplace";
+import { formatDateTime } from "@/lib/format-date";
 
 type OrderRow = {
   id: number;
@@ -222,7 +223,7 @@ function OrdersContent() {
                 </div>
                 <p className="text-xs" style={{ color: "var(--muted)" }}>
                   {tab === "purchases" ? "Seller" : "Buyer"}: {o.counterparty_name ?? "—"} ·{" "}
-                  {new Date(o.completed_at).toLocaleString()}
+                  {formatDateTime(o.completed_at)}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Link href={`/cards/${o.card_id}`} className="btn-ghost text-xs">

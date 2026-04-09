@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicSellerReview } from "@/lib/seller-reviews-types";
+import { formatDate } from "@/lib/format-date";
 
 function StarRow({ rating }: { rating: number }) {
   const n = Math.min(5, Math.max(1, Math.round(rating)));
@@ -12,11 +13,6 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-function formatReviewDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
 
 export function SellerReviewsSection({
   reviews,
@@ -57,9 +53,9 @@ export function SellerReviewsSection({
                 <StarRow rating={r.rating} />
                 <span className="sr-only">{r.rating} out of 5 stars</span>
                 <span className="text-sm font-medium">{r.reviewer_display}</span>
-                {formatReviewDate(r.created_at) && (
+                {formatDate(r.created_at) && (
                   <span className="text-xs" style={{ color: "var(--muted)" }}>
-                    · {formatReviewDate(r.created_at)}
+                    · {formatDate(r.created_at)}
                   </span>
                 )}
               </div>
