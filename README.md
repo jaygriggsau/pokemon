@@ -8,7 +8,7 @@ Real-time Pokémon TCG price tracker. Search cards, compare EU (Cardmarket) and 
 - **Price data** - Cardmarket (EU, EUR) and TCGPlayer (US, USD) prices in one view
 - **User accounts** - email/password sign-up, optional GitHub OAuth
 - **Watchlist** - save cards to track across sessions
-- **Marketplace** - peer-to-peer listings with photo uploads and optional Stripe card checkout (Connect payouts)
+- **Marketplace** - peer-to-peer listings with photo uploads, buyer/seller messaging before purchase, and optional Stripe card checkout (Connect payouts)
 
 ## Stack
 
@@ -44,7 +44,7 @@ cp .env.example .env.local
 | `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Production: your site origin (e.g. `https://your-domain.com`) |
 | `RAPIDAPI_KEY` | [rapidapi.com/tcggopro/api/pokemon-tcg-api](https://rapidapi.com/tcggopro/api/pokemon-tcg-api) - free 100 req/day |
-| `BLOB_READ_WRITE_TOKEN` | Marketplace photo uploads - token from your Vercel Blob store |
+| `BLOB_READ_WRITE_TOKEN` | Marketplace: seller photos and mirrored catalog card art (all listing images use Vercel Blob) |
 | `STRIPE_SECRET_KEY` | [Stripe Dashboard](https://dashboard.stripe.com/apikeys) - enables card checkout and Connect |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret from your Stripe webhook endpoint (event: `checkout.session.completed`, `account.updated`) pointing to `/api/webhooks/stripe` |
 | `STRIPE_PLATFORM_FEE_BPS` | Optional - platform fee in basis points (default `500` = 5% of each checkout, before Stripe processing fees) |
@@ -53,7 +53,7 @@ cp .env.example .env.local
 
 ### 3. Set up the database
 
-Create a PostgreSQL database, then run the SQL in `schema.sql` so users, sessions, watchlist, and marketplace tables exist. If you already ran an older schema, also run `schema_stripe.sql` for Stripe columns and indexes.
+Create a PostgreSQL database, then run the SQL in `schema.sql` so users, sessions, watchlist, and marketplace tables exist. If you already ran an older schema, also run `schema_stripe.sql` for Stripe columns and indexes, and `schema_marketplace_messages.sql` for buyer/seller chat tables.
 
 ### 4. Run the dev server
 

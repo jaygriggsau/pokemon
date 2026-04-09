@@ -40,6 +40,7 @@ export default function ListingDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
 
   const id = params?.id;
 
@@ -101,6 +102,25 @@ export default function ListingDetailPage() {
       alert(e instanceof Error ? e.message : "Failed");
     } finally {
       setBuying(false);
+    }
+  }
+
+  async function messageSeller() {
+    if (!listing || !session) return;
+    setOpeningChat(true);
+    try {
+      const res = await fetch("/api/marketplace/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not start chat");
+      router.push(`/marketplace/messages/${data.conversationId}`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setOpeningChat(false);
     }
   }
 
@@ -259,6 +279,23 @@ export default function ListingDetailPage() {
           >
             View price chart &amp; market data for this card →
           </Link>
+
+          {session && !isSeller && listing.status === "active" && (
+            <button
+              type="button"
+              className="btn-ghost w-full text-sm"
+              disabled={openingChat}
+              onClick={messageSeller}
+            >
+              {openingChat ? "Opening…" : "Message seller"}
+            </button>
+          )}
+
+          {session && isSeller && (
+            <Link href="/marketplace/messages" className="btn-ghost w-full text-center text-sm">
+              Your messages
+            </Link>
+          )}
 
           {listing.status === "active" && isSeller && (
             <button type="button" className="btn-ghost w-full" disabled={cancelling} onClick={cancelListing}>

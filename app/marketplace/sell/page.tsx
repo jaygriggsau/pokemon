@@ -232,7 +232,7 @@ function SellForm() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Sell a card</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Front and back photos are uploaded to secure storage; your listing stores the image links. Set item price and postage separately.
+          Front, back, and catalog reference images are stored on Vercel Blob when you publish. Set item price and postage separately.
           {stripePayout?.paymentsEnabled
             ? " Buyers pay with card; payouts go to your Stripe seller account (platform fee on each sale)."
             : null}

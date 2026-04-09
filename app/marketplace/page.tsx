@@ -49,7 +49,7 @@ function MarketplaceContent() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Marketplace</h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--muted)" }}>
-            Buy and sell cards peer-to-peer with photos. When card payments are enabled, checkout runs on Stripe; sellers receive payouts through Stripe (bank withdrawals in the seller dashboard). Arrange shipping with the other party after purchase.
+            Buy and sell cards peer-to-peer with photos. Use <strong>Messages</strong> to chat with the other party before you buy. When card payments are enabled, checkout runs on Stripe; sellers receive payouts through Stripe (bank withdrawals in the seller dashboard). Arrange shipping with the other party after purchase.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 self-start sm:self-auto">

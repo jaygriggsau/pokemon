@@ -153,6 +153,12 @@ export function Navbar() {
             {session && navLink("/watchlist", "Watchlist", pathname === "/watchlist")}
             {session &&
               navLink(
+                "/marketplace/messages",
+                "Messages",
+                pathname.startsWith("/marketplace/messages")
+              )}
+            {session &&
+              navLink(
                 "/marketplace/earnings",
                 "Earnings",
                 pathname === "/marketplace/earnings"

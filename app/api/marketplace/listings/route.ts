@@ -10,7 +10,10 @@ import {
   parsePositiveCents,
   parseNonNegativeCents,
 } from "@/lib/marketplace";
+import { mirrorCatalogImageToBlob } from "@/lib/marketplace-image-blob";
 import { getStripe } from "@/lib/stripe";
+
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -128,6 +131,18 @@ export async function POST(req: Request) {
   const errB = validateListingPhotoUrl(photoBackUrl, "Back photo");
   if (errB) return NextResponse.json({ error: errB }, { status: 400 });
 
+  let cardImageStored: string | null = null;
+  if (typeof cardImage === "string" && cardImage.trim()) {
+    const mirrored = await mirrorCatalogImageToBlob({
+      sourceUrl: cardImage.trim(),
+      pathnamePrefix: `marketplace/${session.user.id}/card-${cid}`,
+    });
+    if ("error" in mirrored) {
+      return NextResponse.json({ error: mirrored.error }, { status: 503 });
+    }
+    cardImageStored = mirrored.url;
+  }
+
   const desc =
     typeof description === "string" && description.length > 2000
       ? description.slice(0, 2000)
@@ -168,7 +183,7 @@ export async function POST(req: Request) {
         ${cid},
         ${cardName.trim()},
         ${typeof setName === "string" ? setName.trim() || null : null},
-        ${typeof cardImage === "string" ? cardImage : null},
+        ${cardImageStored},
         ${conditionGrade},
         ${desc},
         ${p.cents},
