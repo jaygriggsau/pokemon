@@ -46,14 +46,15 @@ cp .env.example .env.local
 | `RAPIDAPI_KEY` | [rapidapi.com/tcggopro/api/pokemon-tcg-api](https://rapidapi.com/tcggopro/api/pokemon-tcg-api) - free 100 req/day |
 | `BLOB_READ_WRITE_TOKEN` | Marketplace: seller photos and mirrored catalog card art (all listing images use Vercel Blob) |
 | `STRIPE_SECRET_KEY` | [Stripe Dashboard](https://dashboard.stripe.com/apikeys) - enables card checkout and Connect |
-| `STRIPE_WEBHOOK_SECRET` | Signing secret from your Stripe webhook endpoint (event: `checkout.session.completed`, `account.updated`) pointing to `/api/webhooks/stripe` |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret from your Stripe webhook endpoint pointing to `/api/webhooks/stripe` (see Notes for events) |
+| `STRIPE_SELLER_SUBSCRIPTION_PRICE_ID` | **Recurring Price** ID (e.g. `price_...`) for the **$5/month seller plan**—sellers must subscribe before publishing listings when this is set |
 | `STRIPE_PLATFORM_FEE_BPS` | Optional - platform fee in basis points (default `500` = 5% of each checkout, before Stripe processing fees) |
 | `STRIPE_CONNECT_DEFAULT_COUNTRY` | Optional - 2-letter country for new Connect Express accounts (default `US`). Should match where most sellers are based. |
 | `GITHUB_ID` / `GITHUB_SECRET` | Optional - [github.com/settings/developers](https://github.com/settings/developers) |
 
 ### 3. Set up the database
 
-Create a PostgreSQL database, then run the SQL in `schema.sql` so users, sessions, watchlist, and marketplace tables exist. If you already ran an older schema, also run `schema_stripe.sql` for Stripe columns and indexes, and `schema_marketplace_messages.sql` for buyer/seller chat tables.
+Create a PostgreSQL database, then run the SQL in `schema.sql` so users, sessions, watchlist, and marketplace tables exist. If you already ran an older schema, also run `schema_stripe.sql`, `schema_marketplace_messages.sql`, and `schema_seller_subscription.sql` as needed.
 
 ### 4. Run the dev server
 
@@ -78,5 +79,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - The free TCGGO tier allows 100 requests/day. Card search results are cached for 5 minutes (`next: { revalidate: 300 }`).
 - GitHub OAuth is opt-in - leave `GITHUB_ID` / `GITHUB_SECRET` unset to disable the button.
-- **Stripe**: Turn on **Connect** in the Stripe Dashboard and complete platform profile requirements. Sellers onboard via Express accounts; buyers pay with Checkout; funds (minus your application fee) go to the seller's Connect balance. Sellers withdraw to their bank in the [Stripe Express Dashboard](https://stripe.com/docs/connect/express-dashboard) (linked from **Earnings**). For local webhook testing, use `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
+- **Stripe**: Turn on **Connect** in the Stripe Dashboard and complete platform profile requirements. Sellers onboard via Express accounts; buyers pay with Checkout; funds (minus your application fee) go to the seller's Connect balance. Sellers withdraw to their bank in the [Stripe Express Dashboard](https://stripe.com/docs/connect/express-dashboard) (linked from **Earnings**).
+- **Seller plan ($5/mo)**: In Stripe **Products**, create a product with a **recurring monthly** price of **$5 USD** (or your currency), copy the **Price ID** into `STRIPE_SELLER_SUBSCRIPTION_PRICE_ID`. Enable the [Customer portal](https://dashboard.stripe.com/settings/billing/portal) so sellers can update cards or cancel. Webhook events used: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `account.updated`, plus marketplace checkout events. For local testing: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
+- If `STRIPE_SELLER_SUBSCRIPTION_PRICE_ID` is **unset**, listing creation is **not** gated by subscription (useful for dev). When set, sellers use **Seller plan** in the nav or **Seller account activation** on the Sell page.
 - **Listing currencies**: Listings can use the same ISO codes as the site currency menu (USD, EUR, GBP, CAD, AUD, JPY, CHF, PLN, SEK, NOK). Stripe supports these as presentment currencies, but a **Connect account must be able to receive/settle** in that currency (depends on seller country and Stripe account settings)—otherwise Checkout may error until the seller switches listing currency or completes Stripe requirements.

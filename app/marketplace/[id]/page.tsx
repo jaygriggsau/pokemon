@@ -8,6 +8,8 @@ import { useSession } from "next-auth/react";
 import { formatListingMinorAmount } from "@/lib/listing-money";
 import type { ListingCurrency } from "@/lib/marketplace";
 import { SellerRating } from "@/components/SellerRating";
+import { SellerReviewsSection } from "@/components/SellerReviewsSection";
+import type { PublicSellerReview } from "@/lib/seller-reviews-types";
 
 type ListingRow = {
   id: number;
@@ -34,6 +36,7 @@ export default function ListingDetailPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [listing, setListing] = useState<ListingRow | null>(null);
+  const [sellerReviews, setSellerReviews] = useState<PublicSellerReview[]>([]);
   const [cardCheckoutAvailable, setCardCheckoutAvailable] = useState(false);
   const [marketplacePaymentsEnabled, setMarketplacePaymentsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -61,6 +64,7 @@ export default function ListingDetailPage() {
         if (!r.ok) throw new Error(d.error ?? "Not found");
         setCardCheckoutAvailable(Boolean(d.cardCheckoutAvailable));
         setMarketplacePaymentsEnabled(Boolean(d.marketplacePaymentsEnabled));
+        setSellerReviews(Array.isArray(d.sellerReviews) ? d.sellerReviews : []);
         return d.listing as ListingRow;
       })
       .then(setListing)
@@ -327,6 +331,8 @@ export default function ListingDetailPage() {
           )}
         </div>
       </div>
+
+      <SellerReviewsSection reviews={sellerReviews} />
     </div>
   );
 }

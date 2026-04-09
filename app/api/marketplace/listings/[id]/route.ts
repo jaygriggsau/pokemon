@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { getPublicSellerReviews } from "@/lib/seller-reviews-public";
 import { stripePaymentsEnabled } from "@/lib/stripe";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -42,8 +43,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     ...listing
   } = row as Record<string, unknown>;
 
+  const sellerId = String((row as { seller_id: string }).seller_id);
+  const sellerReviews = await getPublicSellerReviews(sellerId, 15);
+
   return NextResponse.json({
     listing,
+    sellerReviews,
     cardCheckoutAvailable,
     marketplacePaymentsEnabled,
   });

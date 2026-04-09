@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
   stripe_connect_account_id TEXT UNIQUE,
   stripe_charges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   stripe_payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  stripe_seller_customer_id TEXT UNIQUE,
+  seller_subscription_id TEXT,
+  seller_subscription_status TEXT,
+  seller_subscription_current_period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

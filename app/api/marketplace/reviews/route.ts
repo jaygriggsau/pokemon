@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { getPublicSellerReviews } from "@/lib/seller-reviews-public";
+
+/** Public list of reviews for a seller (e.g. marketplace profile / listing context). */
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const sellerId = searchParams.get("sellerId")?.trim();
+  if (!sellerId) {
+    return NextResponse.json({ error: "sellerId is required" }, { status: 400 });
+  }
+
+  const limitRaw = searchParams.get("limit");
+  const parsed = limitRaw ? parseInt(limitRaw, 10) : 20;
+  const limit = Number.isFinite(parsed) ? parsed : 20;
+
+  const reviews = await getPublicSellerReviews(sellerId, limit);
+  return NextResponse.json({ reviews });
+}
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);

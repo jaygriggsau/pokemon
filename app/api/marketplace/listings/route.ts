@@ -11,6 +11,7 @@ import {
   parseNonNegativeCents,
 } from "@/lib/marketplace";
 import { mirrorCatalogImageToBlob } from "@/lib/marketplace-image-blob";
+import { isSellerSubscriptionActive, sellerSubscriptionConfigured } from "@/lib/seller-subscription";
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -168,6 +169,22 @@ export async function POST(req: Request) {
         { error: "Finish Stripe seller onboarding before publishing a listing." },
         { status: 400 }
       );
+    }
+
+    if (sellerSubscriptionConfigured()) {
+      const [subRow] = await sql`
+        SELECT seller_subscription_status FROM users WHERE id = ${session.user.id} LIMIT 1
+      `;
+      if (!isSellerSubscriptionActive(subRow?.seller_subscription_status as string | null)) {
+        return NextResponse.json(
+          {
+            error:
+              "Activate your seller account: the $5/month subscription is required to publish listings. Open Seller account from the Sell page.",
+            code: "SELLER_SUBSCRIPTION_REQUIRED",
+          },
+          { status: 403 }
+        );
+      }
     }
   }
 

@@ -43,6 +43,12 @@ function SellForm() {
     chargesEnabled: boolean;
   } | null>(null);
   const [payoutLoading, setPayoutLoading] = useState(true);
+  const [sellerSub, setSellerSub] = useState<{
+    subscriptionProductConfigured: boolean;
+    active: boolean;
+    status: string | null;
+    currentPeriodEnd: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/auth/signin?callbackUrl=/marketplace/sell");
@@ -67,6 +73,28 @@ function SellForm() {
       })
       .finally(() => {
         if (!cancelled) setPayoutLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status, searchParams]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    fetch("/api/stripe/seller-subscription/status")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setSellerSub({
+          subscriptionProductConfigured: Boolean(d.subscriptionProductConfigured),
+          active: Boolean(d.active),
+          status: d.status ?? null,
+          currentPeriodEnd: d.currentPeriodEnd ?? null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setSellerSub(null);
       });
     return () => {
       cancelled = true;
@@ -145,6 +173,14 @@ function SellForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (
+      stripePayout?.paymentsEnabled &&
+      sellerSub?.subscriptionProductConfigured &&
+      !sellerSub.active
+    ) {
+      setError("Activate your seller account ($5/month) before publishing — open Seller account.");
+      return;
+    }
     if (stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled) {
       setError("Finish Stripe seller onboarding before publishing.");
       return;
@@ -238,6 +274,41 @@ function SellForm() {
             : null}
         </p>
       </div>
+
+      {!payoutLoading &&
+        stripePayout?.paymentsEnabled &&
+        sellerSub?.subscriptionProductConfigured &&
+        !sellerSub.active && (
+          <div
+            className="rounded-xl p-4 flex flex-col gap-3"
+            style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
+          >
+            <p className="text-sm font-medium">Seller account activation ($5 / month)</p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              Subscribe once to unlock publishing listings. This is a flat monthly platform fee, separate from Stripe Connect
+              payouts and per-sale fees.
+            </p>
+            <Link href="/marketplace/sell/seller-account" className="btn-primary text-sm text-center">
+              Activate seller account
+            </Link>
+          </div>
+        )}
+
+      {!payoutLoading &&
+        stripePayout?.paymentsEnabled &&
+        sellerSub?.subscriptionProductConfigured &&
+        sellerSub.active && (
+          <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--surface-raised)", color: "var(--muted)" }}>
+            Seller plan active
+            {sellerSub.currentPeriodEnd
+              ? ` · Renews or ends ${new Date(sellerSub.currentPeriodEnd).toLocaleDateString()}`
+              : ""}
+            .{" "}
+            <Link href="/marketplace/sell/seller-account" className="underline" style={{ color: "var(--text)" }}>
+              Manage
+            </Link>
+          </p>
+        )}
 
       {!payoutLoading && stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled && (
         <div

@@ -159,6 +159,12 @@ export function Navbar() {
               )}
             {session &&
               navLink(
+                "/marketplace/sell/seller-account",
+                "Seller plan",
+                pathname === "/marketplace/sell/seller-account"
+              )}
+            {session &&
+              navLink(
                 "/marketplace/earnings",
                 "Earnings",
                 pathname === "/marketplace/earnings"
