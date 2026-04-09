@@ -2,14 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { stripeMinimumChargeMinor } from "@/lib/listing-money";
 import { appOrigin, getStripe, platformFeeCents } from "@/lib/stripe";
 
 export const runtime = "nodejs";
-
-const MIN_CHARGE_CENTS: Record<string, number> = {
-  usd: 50,
-  eur: 50,
-};
 
 export async function POST(req: Request) {
   const stripe = getStripe();
@@ -88,11 +84,14 @@ export async function POST(req: Request) {
   }
 
   const totalCents = listing.price_cents + listing.postage_cents;
-  const currency = listing.currency.toLowerCase();
-  const minC = MIN_CHARGE_CENTS[currency] ?? 50;
-  if (totalCents < minC) {
+  const currencyUpper = listing.currency.toUpperCase();
+  const currencyLower = currencyUpper.toLowerCase();
+  const minMinor = stripeMinimumChargeMinor(currencyUpper);
+  if (totalCents < minMinor) {
     return NextResponse.json(
-      { error: `Order total must be at least ${minC / 100} ${listing.currency}.` },
+      {
+        error: `Order total is below the minimum charge Stripe allows for ${currencyUpper}.`,
+      },
       { status: 400 }
     );
   }
@@ -108,7 +107,7 @@ export async function POST(req: Request) {
     line_items: [
       {
         price_data: {
-          currency,
+          currency: currencyLower,
           unit_amount: totalCents,
           product_data: {
             name: listing.card_name,

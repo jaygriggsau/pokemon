@@ -5,7 +5,13 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LISTING_CONDITIONS, LISTING_CURRENCIES } from "@/lib/marketplace";
+import { CURRENCIES } from "@/lib/currency-context";
+import {
+  isZeroDecimalCurrency,
+  parsePostageInputToMinorUnits,
+  parsePriceInputToMinorUnits,
+} from "@/lib/listing-money";
+import { LISTING_CONDITIONS, LISTING_CURRENCIES, type ListingCurrency } from "@/lib/marketplace";
 import { compressImageFile } from "@/lib/image-compress-client";
 import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
@@ -24,7 +30,7 @@ function SellForm() {
 
   const [price, setPrice] = useState("");
   const [postage, setPostage] = useState("0");
-  const [currency, setCurrency] = useState<"USD" | "EUR">("USD");
+  const [currency, setCurrency] = useState<ListingCurrency>("USD");
   const [conditionGrade, setConditionGrade] = useState<string>(LISTING_CONDITIONS[0]);
   const [description, setDescription] = useState("");
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
@@ -151,20 +157,18 @@ function SellForm() {
       setError("Upload clear photos of the front and back");
       return;
     }
-    const priceNum = parseFloat(price);
-    if (!Number.isFinite(priceNum) || priceNum <= 0) {
-      setError("Enter a valid item price");
+    const priceCents = parsePriceInputToMinorUnits(price, currency);
+    if (priceCents == null) {
+      setError(
+        isZeroDecimalCurrency(currency)
+          ? "Enter a whole-number price (no decimals for this currency)"
+          : "Enter a valid item price"
+      );
       return;
     }
-    const postNum = parseFloat(postage) || 0;
-    if (postNum < 0) {
-      setError("Postage cannot be negative");
-      return;
-    }
-    const priceCents = Math.round(priceNum * 100);
-    const postageCents = Math.round(postNum * 100);
-    if (priceCents < 1) {
-      setError("Price too small");
+    const postageCents = parsePostageInputToMinorUnits(postage, currency);
+    if (postageCents === null) {
+      setError("Enter valid postage (0 or more)");
       return;
     }
 
@@ -345,9 +349,9 @@ function SellForm() {
               </label>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode={isZeroDecimalCurrency(currency) ? "numeric" : "decimal"}
                 className="input-field w-full"
-                placeholder="e.g. 24.99"
+                placeholder={isZeroDecimalCurrency(currency) ? "e.g. 1500" : "e.g. 24.99"}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 required
@@ -359,9 +363,9 @@ function SellForm() {
               </label>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode={isZeroDecimalCurrency(currency) ? "numeric" : "decimal"}
                 className="input-field w-full"
-                placeholder="0 for pickup / included"
+                placeholder={isZeroDecimalCurrency(currency) ? "0" : "0 for pickup / included"}
                 value={postage}
                 onChange={(e) => setPostage(e.target.value)}
               />
@@ -374,15 +378,23 @@ function SellForm() {
             </label>
             <select
               className="input-field w-full sm:w-auto"
+              aria-label="Listing currency"
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as "USD" | "EUR")}
+              onChange={(e) => setCurrency(e.target.value as ListingCurrency)}
             >
-              {LISTING_CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
+              {LISTING_CURRENCIES.map((code) => {
+                const meta = CURRENCIES.find((c) => c.code === code);
+                return (
+                  <option key={code} value={code}>
+                    {meta ? `${meta.flag} ${code}` : code}
+                  </option>
+                );
+              })}
             </select>
+            <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+              Same codes as the site currency menu. Card checkout uses this currency; your Stripe Connect country must support
+              receiving it—otherwise Checkout may fail until you change currency or finish Stripe requirements.
+            </p>
           </div>
 
           <div>

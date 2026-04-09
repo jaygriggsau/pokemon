@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCurrency } from "@/lib/currency-context";
+import { formatListingMinorAmount } from "@/lib/listing-money";
+import type { ListingCurrency } from "@/lib/marketplace";
 import { SellerRating } from "@/components/SellerRating";
 
 export type ListingCardData = {
@@ -14,18 +15,17 @@ export type ListingCardData = {
   condition_grade: string;
   price_cents: number;
   postage_cents: number;
-  currency: "USD" | "EUR";
+  currency: ListingCurrency;
   seller_name: string | null;
   seller_review_count: number | null;
   seller_avg_rating: string | number | null;
 };
 
 export function MarketplaceListingCard({ listing }: { listing: ListingCardData }) {
-  const { format } = useCurrency();
   const cur = listing.currency;
-  const item = format(listing.price_cents / 100, cur);
+  const item = formatListingMinorAmount(listing.price_cents, cur);
   const post =
-    listing.postage_cents > 0 ? format(listing.postage_cents / 100, cur) : "Free";
+    listing.postage_cents > 0 ? formatListingMinorAmount(listing.postage_cents, cur) : "Free";
 
   return (
     <Link

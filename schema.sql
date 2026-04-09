@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS marketplace_listings (
   description TEXT,
   price_cents INTEGER NOT NULL CHECK (price_cents > 0),
   postage_cents INTEGER NOT NULL DEFAULT 0 CHECK (postage_cents >= 0),
-  currency TEXT NOT NULL DEFAULT 'USD' CHECK (currency IN ('USD', 'EUR')),
+  currency TEXT NOT NULL DEFAULT 'USD' CHECK (currency IN ('USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'PLN', 'SEK', 'NOK')),
   photo_front TEXT NOT NULL,
   photo_back TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'sold', 'cancelled')),

@@ -5,6 +5,7 @@ import { sql } from "@/lib/db";
 import {
   LISTING_CONDITIONS,
   LISTING_CURRENCIES,
+  type ListingCurrency,
   validateListingPhotoUrl,
   parsePositiveCents,
   parseNonNegativeCents,
@@ -113,8 +114,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid condition" }, { status: 400 });
   }
 
-  if (!LISTING_CURRENCIES.includes(currency as (typeof LISTING_CURRENCIES)[number])) {
-    return NextResponse.json({ error: "Currency must be USD or EUR" }, { status: 400 });
+  if (!LISTING_CURRENCIES.includes(currency as ListingCurrency)) {
+    return NextResponse.json({ error: "Unsupported listing currency" }, { status: 400 });
   }
 
   const p = parsePositiveCents(priceCents, "Price");

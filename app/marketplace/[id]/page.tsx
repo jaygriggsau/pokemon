@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCurrency } from "@/lib/currency-context";
+import { formatListingMinorAmount } from "@/lib/listing-money";
+import type { ListingCurrency } from "@/lib/marketplace";
 import { SellerRating } from "@/components/SellerRating";
 
 type ListingRow = {
@@ -19,7 +20,7 @@ type ListingRow = {
   description: string | null;
   price_cents: number;
   postage_cents: number;
-  currency: "USD" | "EUR";
+  currency: ListingCurrency;
   photo_front: string;
   photo_back: string;
   status: string;
@@ -32,7 +33,6 @@ export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
-  const { format } = useCurrency();
   const [listing, setListing] = useState<ListingRow | null>(null);
   const [cardCheckoutAvailable, setCardCheckoutAvailable] = useState(false);
   const [marketplacePaymentsEnabled, setMarketplacePaymentsEnabled] = useState(false);
@@ -145,9 +145,10 @@ export default function ListingDetailPage() {
   }
 
   const cur = listing.currency;
-  const item = format(listing.price_cents / 100, cur);
-  const post = listing.postage_cents > 0 ? format(listing.postage_cents / 100, cur) : "Free";
-  const total = format((listing.price_cents + listing.postage_cents) / 100, cur);
+  const item = formatListingMinorAmount(listing.price_cents, cur);
+  const post =
+    listing.postage_cents > 0 ? formatListingMinorAmount(listing.postage_cents, cur) : "Free";
+  const total = formatListingMinorAmount(listing.price_cents + listing.postage_cents, cur);
   const isSeller = session?.user?.id === listing.seller_id;
   const canBuy = Boolean(session && !isSeller && listing.status === "active");
   const sellerCardReady = !marketplacePaymentsEnabled || cardCheckoutAvailable;

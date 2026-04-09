@@ -4,14 +4,15 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCurrency } from "@/lib/currency-context";
+import { formatListingMinorAmount } from "@/lib/listing-money";
+import type { ListingCurrency } from "@/lib/marketplace";
 
 type OrderRow = {
   id: number;
   listing_id: number;
   price_cents: number;
   postage_cents: number;
-  currency: "USD" | "EUR";
+  currency: ListingCurrency;
   completed_at: string;
   card_id: number;
   card_name: string;
@@ -93,7 +94,6 @@ function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightReview = searchParams.get("review");
-  const { format } = useCurrency();
 
   const [tab, setTab] = useState<"purchases" | "sales">("purchases");
   const [purchases, setPurchases] = useState<OrderRow[]>([]);
@@ -197,7 +197,7 @@ function OrdersContent() {
         <ul className="flex flex-col gap-4">
           {list.map((o) => {
             const cur = o.currency;
-            const total = format((o.price_cents + o.postage_cents) / 100, cur);
+            const total = formatListingMinorAmount(o.price_cents + o.postage_cents, cur);
             const reviewExpanded =
               tab === "purchases" &&
               !o.has_review &&

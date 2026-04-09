@@ -8,8 +8,7 @@ export const LISTING_CONDITIONS = [
 
 export type ListingCondition = (typeof LISTING_CONDITIONS)[number];
 
-export const LISTING_CURRENCIES = ["USD", "EUR"] as const;
-export type ListingCurrency = (typeof LISTING_CURRENCIES)[number];
+export { LISTING_CURRENCIES, type ListingCurrency } from "./listing-money";
 
 /** HTTPS URLs from the configured blob storage host (upload via /api/marketplace/upload). */
 export function validateListingPhotoUrl(url: unknown, field: string): string | null {
