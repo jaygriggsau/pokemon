@@ -437,10 +437,14 @@ function SellForm() {
       });
       const uploadData = await readResponseJson<{
         error?: string;
+        detail?: string;
         photoFrontUrl?: string;
         photoBackUrl?: string;
       }>(uploadRes);
-      if (!uploadRes.ok) throw new Error(uploadData.error ?? "Image upload failed");
+      if (!uploadRes.ok) {
+        const parts = [uploadData.error, uploadData.detail].filter(Boolean);
+        throw new Error(parts.length ? parts.join(" — ") : "Image upload failed");
+      }
       if (!uploadData.photoFrontUrl || !uploadData.photoBackUrl) {
         throw new Error("Upload succeeded but photo URLs were missing. Try again.");
       }
