@@ -37,16 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             className="text-center text-xs py-4 sm:py-6 px-3 [padding-bottom:max(1rem,env(safe-area-inset-bottom))]"
             style={{ color: "var(--muted)", borderTop: "1px solid var(--border)" }}
           >
-            Price data via{" "}
-            <a
-              href="https://www.pokemon-api.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "var(--red)" }}
-            >
-              TCGGO API
-            </a>{" "}
-            · Not affiliated with Nintendo or The Pokémon Company
+            Not affiliated with Nintendo or The Pokémon Company
           </footer>
         </SessionProvider>
       </body>
