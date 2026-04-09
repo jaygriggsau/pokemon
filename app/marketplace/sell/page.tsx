@@ -13,6 +13,7 @@ import {
 } from "@/lib/listing-money";
 import { LISTING_CONDITIONS, LISTING_CURRENCIES, type ListingCurrency } from "@/lib/marketplace";
 import { compressImageFile } from "@/lib/image-compress-client";
+import { readResponseJson } from "@/lib/read-response-json";
 import { MarketPriceGuide } from "@/components/MarketPriceGuide";
 import type { TcgCard } from "@/lib/tcggo";
 
@@ -434,8 +435,15 @@ function SellForm() {
         method: "POST",
         body: up,
       });
-      const uploadData = await uploadRes.json();
+      const uploadData = await readResponseJson<{
+        error?: string;
+        photoFrontUrl?: string;
+        photoBackUrl?: string;
+      }>(uploadRes);
       if (!uploadRes.ok) throw new Error(uploadData.error ?? "Image upload failed");
+      if (!uploadData.photoFrontUrl || !uploadData.photoBackUrl) {
+        throw new Error("Upload succeeded but photo URLs were missing. Try again.");
+      }
 
       const res = await fetch("/api/marketplace/listings", {
         method: "POST",
@@ -454,8 +462,9 @@ function SellForm() {
           photoBackUrl: uploadData.photoBackUrl,
         }),
       });
-      const data = await res.json();
+      const data = await readResponseJson<{ error?: string; id?: number }>(res);
       if (!res.ok) throw new Error(data.error ?? "Failed to create listing");
+      if (typeof data.id !== "number") throw new Error("Listing was created but the response was incomplete. Try refreshing the marketplace.");
       router.push(`/marketplace/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");

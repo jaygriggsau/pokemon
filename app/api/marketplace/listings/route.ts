@@ -15,6 +15,8 @@ import { isSellerSubscriptionActive, sellerSubscriptionConfigured } from "@/lib/
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
+/** Vercel: catalog image mirror + DB insert can exceed default function time on slow Blob. */
+export const maxDuration = 60;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

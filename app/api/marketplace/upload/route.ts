@@ -5,6 +5,10 @@ import { authOptions } from "@/lib/auth";
 
 const MAX_BYTES = 1_500_000; // under typical function body limits after compression
 
+export const runtime = "nodejs";
+/** Vercel: allow large multipart + Blob uploads without cutting off mid-request. */
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
