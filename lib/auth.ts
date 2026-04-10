@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { sql } from "@/lib/db";
+import { fetchUserIsAdmin } from "@/lib/user-admin";
 
 declare module "next-auth" {
   interface Session {
@@ -11,6 +12,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      /** Set from DB on each session read; admins bypass seller subscription / Connect for publishing. */
+      isAdmin?: boolean;
     };
   }
 }
@@ -83,7 +86,10 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) session.user.id = token.id;
+      if (session.user && token.id) {
+        session.user.id = token.id;
+        session.user.isAdmin = await fetchUserIsAdmin(token.id);
+      }
       return session;
     },
   },

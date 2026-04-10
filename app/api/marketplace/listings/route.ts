@@ -13,6 +13,7 @@ import {
 import { mirrorCatalogImageToBlob } from "@/lib/marketplace-image-blob";
 import { sellerSubscriptionConfigured, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
 import { getLiveSellerPlanForPrice } from "@/lib/seller-subscription-stripe-verify";
+import { fetchUserIsAdmin } from "@/lib/user-admin";
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -155,7 +156,8 @@ export async function POST(req: Request) {
         : null;
 
   const stripe = getStripe();
-  if (stripe) {
+  const isAdmin = await fetchUserIsAdmin(session.user.id);
+  if (stripe && !isAdmin) {
     const [seller] = await sql`
       SELECT stripe_connect_account_id, stripe_seller_customer_id
       FROM users

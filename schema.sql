@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   seller_subscription_id TEXT,
   seller_subscription_status TEXT,
   seller_subscription_current_period_end TIMESTAMPTZ,
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

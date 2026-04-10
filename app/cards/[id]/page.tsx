@@ -144,24 +144,6 @@ export default function CardDetailPage() {
             <Link href="/auth/signin" className="btn-ghost w-full text-center" style={{ fontSize: "0.8125rem" }}>Sign in to watch</Link>
           )}
 
-          {/* Buy links */}
-          {(card.links?.cardmarket || card.links?.tcgplayer) && (
-            <div className="flex flex-col gap-1.5">
-              {card.links.cardmarket && (
-                <a href={card.links.cardmarket} target="_blank" rel="noopener noreferrer"
-                  className="btn-ghost w-full text-center" style={{ fontSize: "0.75rem" }}>
-                  Buy on Cardmarket ↗
-                </a>
-              )}
-              {card.links.tcgplayer && (
-                <a href={card.links.tcgplayer} target="_blank" rel="noopener noreferrer"
-                  className="btn-ghost w-full text-center" style={{ fontSize: "0.75rem" }}>
-                  Buy on TCGPlayer ↗
-                </a>
-              )}
-            </div>
-          )}
-
           <div className="flex flex-col gap-1.5 pt-1">
             <Link
               href={`/marketplace?cardId=${card.id}`}

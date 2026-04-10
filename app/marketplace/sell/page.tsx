@@ -390,7 +390,9 @@ function SellForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const isAdmin = Boolean(session?.user?.isAdmin);
     if (
+      !isAdmin &&
       stripePayout?.paymentsEnabled &&
       sellerSub?.subscriptionProductConfigured &&
       !sellerSub.active
@@ -398,7 +400,7 @@ function SellForm() {
       setError("Start your seller plan on the Seller account page before publishing.");
       return;
     }
-    if (stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled) {
+    if (!isAdmin && stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled) {
       setError("Finish Stripe Connect on this page before publishing.");
       return;
     }
@@ -490,6 +492,8 @@ function SellForm() {
 
   if (!session) return null;
 
+  const isAdmin = Boolean(session.user.isAdmin);
+
   return (
     <div className="flex flex-col gap-8 max-w-xl mx-auto">
       <div>
@@ -505,7 +509,18 @@ function SellForm() {
         </p>
       </div>
 
-      {!payoutLoading &&
+      {isAdmin && (
+        <p
+          className="text-xs rounded-lg px-3 py-2"
+          style={{ background: "color-mix(in srgb, var(--red) 14%, var(--surface-raised))", color: "var(--text)" }}
+        >
+          <strong>Admin</strong> — you can publish without a seller plan or Stripe Connect. Buyers still need you on Connect for
+          card checkout on your listings.
+        </p>
+      )}
+
+      {!isAdmin &&
+        !payoutLoading &&
         stripePayout?.paymentsEnabled &&
         sellerSub?.subscriptionProductConfigured &&
         !sellerSub.active && (
@@ -523,7 +538,8 @@ function SellForm() {
           </div>
         )}
 
-      {!payoutLoading &&
+      {!isAdmin &&
+        !payoutLoading &&
         stripePayout?.paymentsEnabled &&
         sellerSub?.subscriptionProductConfigured &&
         sellerSub.active && (
@@ -539,7 +555,7 @@ function SellForm() {
           </p>
         )}
 
-      {!payoutLoading && stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled && (
+      {!isAdmin && !payoutLoading && stripePayout?.paymentsEnabled && !stripePayout.chargesEnabled && (
         <div
           className="rounded-xl p-4 flex flex-col gap-3"
           style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}

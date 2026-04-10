@@ -222,6 +222,7 @@ export function Navbar() {
         {session &&
           mk("/marketplace/sell/seller-account", "Seller plan", pathname === "/marketplace/sell/seller-account")}
         {session && mk("/marketplace/earnings", "Earnings", pathname === "/marketplace/earnings")}
+        {session?.user?.isAdmin && mk("/admin", "Admin", pathname === "/admin")}
       </>
     );
   };

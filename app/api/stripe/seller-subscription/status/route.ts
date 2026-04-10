@@ -5,6 +5,7 @@ import { sql } from "@/lib/db";
 import { getStripe, stripePaymentsEnabled } from "@/lib/stripe";
 import { sellerSubscriptionConfigured, sellerSubscriptionPriceId } from "@/lib/seller-subscription";
 import { getLiveSellerPlanForPrice } from "@/lib/seller-subscription-stripe-verify";
+import { fetchUserIsAdmin } from "@/lib/user-admin";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,18 @@ export async function GET() {
 
   const paymentsEnabled = stripePaymentsEnabled();
   const configured = sellerSubscriptionConfigured();
+  const isAdmin = await fetchUserIsAdmin(session.user.id);
+
+  if (isAdmin) {
+    return NextResponse.json({
+      paymentsEnabled,
+      subscriptionProductConfigured: configured,
+      active: true,
+      status: "active",
+      currentPeriodEnd: null,
+      canManage: true,
+    });
+  }
 
   if (!paymentsEnabled || !configured) {
     return NextResponse.json({
