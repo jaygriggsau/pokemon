@@ -183,7 +183,7 @@ export default function ListingDetailPage() {
       <div className="text-center py-16 flex flex-col gap-3 items-center">
         <p className="font-semibold">Listing not found</p>
         <Link href="/marketplace" className="btn-primary">
-          Back to marketplace
+          Back to listings
         </Link>
       </div>
     );
@@ -302,7 +302,7 @@ export default function ListingDetailPage() {
             className="btn-ghost w-full text-center text-sm"
             style={{ borderColor: "var(--eu-color)", color: "var(--eu-color)" }}
           >
-            View price chart &amp; market data for this card →
+            View price chart &amp; reference data for this card →
           </Link>
 
           <ShareLinkButton

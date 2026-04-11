@@ -13,9 +13,9 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
-  title: "pokemove — Pokémon TCG prices & marketplace",
+  title: "pokemove — Pokémon TCG prices",
   description:
-    "Search Pokémon cards, compare EU (Cardmarket) and US (TCGPlayer) prices in your currency, watchlist favorites, and buy or sell on the marketplace.",
+    "Search Pokémon cards, compare EU (Cardmarket) and US (TCGPlayer) prices in your currency, and keep a watchlist of favorites.",
 };
 
 export const viewport = {

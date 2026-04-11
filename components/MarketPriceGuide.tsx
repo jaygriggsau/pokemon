@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCurrency } from "@/lib/currency-context";
 import type { TcgCard } from "@/lib/tcggo";
 
-/** Reference prices from Cardmarket (EU) and TCGPlayer (US-style market), same sources as search results. */
+/** Reference prices from Cardmarket (EU) and TCGPlayer (US), same sources as search results. */
 export function MarketPriceGuide({ card }: { card: TcgCard }) {
   const { format } = useCurrency();
   const cm = card.prices?.cardmarket;
@@ -21,7 +21,7 @@ export function MarketPriceGuide({ card }: { card: TcgCard }) {
         style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
       >
         <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--muted)" }}>
-          Market price guide
+          Reference prices
         </p>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
           No guide prices for this printing yet. Check the{" "}
@@ -40,13 +40,13 @@ export function MarketPriceGuide({ card }: { card: TcgCard }) {
       style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
     >
       <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--muted)" }}>
-        Market price guide
+        Reference prices
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {hasEu && (
           <div className="min-w-0">
             <span className="text-xs block mb-0.5" style={{ color: "var(--muted)" }}>
-              EU market (Cardmarket)
+              Cardmarket (EU)
             </span>
             <span className="text-base font-bold tabular-nums" style={{ color: "var(--eu-color)" }}>
               {format(cm!.lowest_near_mint!, "EUR")}
@@ -59,19 +59,19 @@ export function MarketPriceGuide({ card }: { card: TcgCard }) {
         {hasUs && (
           <div className="min-w-0">
             <span className="text-xs block mb-0.5" style={{ color: "var(--muted)" }}>
-              US market (TCGPlayer)
+              TCGPlayer (US)
             </span>
             <span className="text-base font-bold tabular-nums" style={{ color: "var(--red)" }}>
               {format(tcg!.market_price!, tcgSourceCur)}
             </span>
             <span className="text-xs block mt-0.5" style={{ color: "var(--muted)" }}>
-              Market
+              Listed
             </span>
           </div>
         )}
       </div>
       <p className="text-xs pt-1 border-t" style={{ color: "var(--muted)", borderColor: "var(--border)" }}>
-        Reference only — your listing price and currency are up to you.
+        Reference only — not a buy or sell offer.
       </p>
     </div>
   );

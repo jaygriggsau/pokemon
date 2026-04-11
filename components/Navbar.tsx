@@ -6,6 +6,7 @@ import { BrandWordmark } from "@/components/BrandWordmark";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useCurrency, CURRENCIES, type CurrencyCode } from "@/lib/currency-context";
+import { marketplaceEnabled } from "@/lib/features";
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
@@ -211,17 +212,22 @@ export function Navbar() {
     </Link>
   );
 
+  const mp = marketplaceEnabled();
+
   const mainNav = (mobile: boolean) => {
     const mk = mobile ? mobileNavLink : navLink;
     return (
       <>
         {mk("/", "Search", pathname === "/")}
-        {mk("/marketplace", "Marketplace", pathname === "/marketplace" || pathname.startsWith("/marketplace/"))}
+        {mp && mk("/marketplace", "Listings", pathname === "/marketplace" || pathname.startsWith("/marketplace/"))}
         {session && mk("/watchlist", "Watchlist", pathname === "/watchlist")}
-        {session && mk("/marketplace/messages", "Messages", pathname.startsWith("/marketplace/messages"))}
         {session &&
+          mk("/collections", "Collections", pathname === "/collections" || pathname.startsWith("/collections/"))}
+        {mp && session && mk("/marketplace/messages", "Messages", pathname.startsWith("/marketplace/messages"))}
+        {mp &&
+          session &&
           mk("/marketplace/sell/seller-account", "Seller plan", pathname === "/marketplace/sell/seller-account")}
-        {session && mk("/marketplace/earnings", "Earnings", pathname === "/marketplace/earnings")}
+        {mp && session && mk("/marketplace/earnings", "Earnings", pathname === "/marketplace/earnings")}
         {session?.user?.isAdmin && mk("/admin", "Admin", pathname === "/admin")}
       </>
     );

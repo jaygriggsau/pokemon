@@ -121,13 +121,13 @@ export function CardItem({ card, index = 99, inWatchlist = false, onWatchlistCha
           <div className="card-item-prices">
             {hasEu && (
               <div className="card-price-cell">
-                <span className="card-price-label">EU Market</span>
+                <span className="card-price-label">Cardmarket (EU)</span>
                 <span className="card-price-value">{format(cmPrice!.lowest_near_mint!, "EUR")}</span>
               </div>
             )}
             {hasUs && (
               <div className="card-price-cell card-price-cell--us">
-                <span className="card-price-label">US Market</span>
+                <span className="card-price-label">TCGPlayer (US)</span>
                 <span className="card-price-value">{format(tcgPrice!.market_price!, tcgSourceCur)}</span>
               </div>
             )}

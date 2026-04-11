@@ -9,6 +9,8 @@ import { useCurrency } from "@/lib/currency-context";
 import { PriceChart } from "@/components/PriceChart";
 import { buildPriceHistory, artistName, type TcgCard, type GradedPrices } from "@/lib/tcggo";
 import { formatMonthYear } from "@/lib/format-date";
+import { marketplaceEnabled } from "@/lib/features";
+import { AddToCollection } from "@/components/AddToCollection";
 
 // ── Type colour map ────────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
@@ -98,6 +100,7 @@ export default function CardDetailPage() {
   const isSynthetic = !cm?.history || cm.history.length <= 1;
 
   const supertype = card.supertype?.replace(/[^\x00-\x7F]/g, "") || "";
+  const mp = marketplaceEnabled();
 
   return (
     <div className="flex flex-col gap-10">
@@ -134,32 +137,43 @@ export default function CardDetailPage() {
 
           {/* Watch */}
           {session ? (
-            <button onClick={toggleWatchlist} disabled={watchLoading}
-              className={watched ? "btn-primary w-full" : "btn-ghost w-full"}>
-              {watchLoading
-                ? <span className="inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                : watched ? "★ Watching" : "☆ Add to Watchlist"}
-            </button>
+            <>
+              <button onClick={toggleWatchlist} disabled={watchLoading}
+                className={watched ? "btn-primary w-full" : "btn-ghost w-full"}>
+                {watchLoading
+                  ? <span className="inline-block w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  : watched ? "★ Watching" : "☆ Add to Watchlist"}
+              </button>
+              <AddToCollection card={card} />
+            </>
           ) : (
-            <Link href="/auth/signin" className="btn-ghost w-full text-center" style={{ fontSize: "0.8125rem" }}>Sign in to watch</Link>
+            <Link
+              href={`/auth/signin?callbackUrl=${encodeURIComponent(`/cards/${card.id}`)}`}
+              className="btn-ghost w-full text-center"
+              style={{ fontSize: "0.8125rem" }}
+            >
+              Sign in for watchlist &amp; collections
+            </Link>
           )}
 
-          <div className="flex flex-col gap-1.5 pt-1">
-            <Link
-              href={`/marketplace?cardId=${card.id}`}
-              className="btn-ghost w-full text-center"
-              style={{ fontSize: "0.8125rem", borderColor: "var(--eu-color)", color: "var(--eu-color)" }}
-            >
-              Community marketplace — this card
-            </Link>
-            <Link
-              href={`/marketplace/sell?cardId=${card.id}`}
-              className="btn-ghost w-full text-center"
-              style={{ fontSize: "0.75rem" }}
-            >
-              Sell this card (list with photos)
-            </Link>
-          </div>
+          {mp && (
+            <div className="flex flex-col gap-1.5 pt-1">
+              <Link
+                href={`/marketplace?cardId=${card.id}`}
+                className="btn-ghost w-full text-center"
+                style={{ fontSize: "0.8125rem", borderColor: "var(--eu-color)", color: "var(--eu-color)" }}
+              >
+                Community listings — this card
+              </Link>
+              <Link
+                href={`/marketplace/sell?cardId=${card.id}`}
+                className="btn-ghost w-full text-center"
+                style={{ fontSize: "0.75rem" }}
+              >
+                Sell this card (list with photos)
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Right: all card metadata */}
@@ -222,7 +236,7 @@ export default function CardDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {cm?.lowest_near_mint != null && (
                   <MarketCard
-                    market="Cardmarket" region="EU Market" accentColor="var(--eu-color)"
+                    market="Cardmarket" region="EU" accentColor="var(--eu-color)"
                     rows={[
                       { label: "Near Mint",  value: format(cm.lowest_near_mint,   "EUR"), highlight: true },
                       cm["7d_average"]  != null && { label: "7d avg",   value: format(cm["7d_average"]!,  "EUR") },
@@ -232,9 +246,9 @@ export default function CardDetailPage() {
                 )}
                 {tcg?.market_price != null && (
                   <MarketCard
-                    market="TCGPlayer" region="US Market" accentColor="var(--red)"
+                    market="TCGPlayer" region="US" accentColor="var(--red)"
                     rows={[
-                      { label: "Market",  value: format(tcg.market_price, tcg.currency as "EUR" | "USD" ?? "USD"), highlight: true },
+                      { label: "Listed",  value: format(tcg.market_price, tcg.currency as "EUR" | "USD" ?? "USD"), highlight: true },
                       tcg.mid_price != null && { label: "Mid",  value: format(tcg.mid_price, tcg.currency as "EUR" | "USD" ?? "USD") },
                     ].filter(Boolean) as { label: string; value: string; highlight?: boolean }[]}
                   />

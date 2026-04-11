@@ -44,7 +44,7 @@ export function buildListingShareMetadata(row: ListingOgRow) {
   const title = `${row.card_name} · ${row.condition_grade} · ${price}`;
   const statusLabel =
     row.status === "active" ? "For sale" : row.status === "sold" ? "Sold" : "Unavailable";
-  const description = [row.set_name, statusLabel, "pokemove marketplace"].filter(Boolean).join(" · ");
+  const description = [row.set_name, statusLabel, "pokemove"].filter(Boolean).join(" · ");
   const image =
     absoluteAssetUrl(site, row.card_image) ?? absoluteAssetUrl(site, row.photo_front) ?? undefined;
 

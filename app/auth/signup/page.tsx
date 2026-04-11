@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { marketplaceEnabled } from "@/lib/features";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -61,7 +62,9 @@ export default function SignUpPage() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Join pokemove — prices, watchlist &amp; marketplace
+          {marketplaceEnabled()
+            ? "Join pokemove — prices, watchlist & listings"
+            : "Join pokemove — EU & US prices and a personal watchlist"}
         </p>
       </div>
 

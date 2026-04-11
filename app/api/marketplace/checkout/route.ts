@@ -111,7 +111,7 @@ export async function POST(req: Request) {
           unit_amount: totalCents,
           product_data: {
             name: listing.card_name,
-            description: `Marketplace · item and postage · listing #${listing.id}`,
+            description: `Listing · item and postage · #${listing.id}`,
           },
         },
         quantity: 1,

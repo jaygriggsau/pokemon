@@ -60,7 +60,7 @@ function ReturnContent() {
           My orders
         </Link>
         <Link href="/marketplace" className="btn-ghost text-center">
-          Back to marketplace
+          Back to listings
         </Link>
       </div>
     </div>

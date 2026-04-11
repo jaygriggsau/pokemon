@@ -193,3 +193,17 @@ export function buildPriceHistory(card: TcgCard) {
   }
   return rows;
 }
+
+/** Cardmarket lowest NM in EUR, if present. */
+export function referenceEuEur(card: TcgCard): number | null {
+  const v = card.prices?.cardmarket?.lowest_near_mint;
+  return v != null && Number.isFinite(v) ? v : null;
+}
+
+/** TCGPlayer listed (market) price and its API currency. */
+export function referenceTcgplayer(card: TcgCard): { amount: number; from: "EUR" | "USD" } | null {
+  const p = card.prices?.tcg_player;
+  if (p?.market_price == null || !Number.isFinite(p.market_price)) return null;
+  const from = p.currency?.toUpperCase() === "USD" ? "USD" : "EUR";
+  return { amount: p.market_price, from };
+}

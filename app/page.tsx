@@ -5,11 +5,13 @@ import Link from "next/link";
 import { CardItem } from "@/components/CardItem";
 import { BrandWordmark } from "@/components/BrandWordmark";
 import type { TcgCard } from "@/lib/tcggo";
+import { marketplaceEnabled } from "@/lib/features";
 
 const BENEFITS: {
   title: string;
   body: string;
   icon: React.ReactNode;
+  marketplaceOnly?: boolean;
 }[] = [
   {
     title: "EU & US prices together",
@@ -30,8 +32,9 @@ const BENEFITS: {
     ),
   },
   {
-    title: "Buy & sell on the marketplace",
+    title: "Buy & sell listings",
     body: "Browse listings with real photos, message sellers, and pay with card when checkout is enabled—or record purchases when you agree off-platform.",
+    marketplaceOnly: true,
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -42,6 +45,7 @@ const BENEFITS: {
   {
     title: "Reviews from real buyers",
     body: "After a completed order, buyers can rate sellers—so you get signal beyond photos and descriptions before you commit.",
+    marketplaceOnly: true,
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -50,7 +54,7 @@ const BENEFITS: {
   },
   {
     title: "Charts per card",
-    body: "Open any card for history and context—helpful when you are deciding a fair price to list or whether to pull the trigger on a purchase.",
+    body: "Open any card for history and context—helpful when you are comparing prices over time or deciding whether to buy.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M3 3v18h18" strokeLinecap="round" />
@@ -61,6 +65,7 @@ const BENEFITS: {
   {
     title: "Share a listing in one tap",
     body: "Each listing has a readable URL (card name in the path). Use the Share button to copy the link or open your phone's share sheet—many apps show a preview with the card image and price.",
+    marketplaceOnly: true,
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" strokeLinecap="round" />
@@ -73,6 +78,8 @@ const BENEFITS: {
 const SUGGESTIONS = ["Charizard ex", "Pikachu VMAX", "Mewtwo", "Lugia", "Umbreon VMAX", "Giratina VSTAR"];
 
 export default function HomePage() {
+  const mp = marketplaceEnabled();
+  const benefits = mp ? BENEFITS : BENEFITS.filter((b) => !b.marketplaceOnly);
   const [query, setQuery] = useState("");
   const [cards, setCards] = useState<TcgCard[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,11 +125,13 @@ export default function HomePage() {
             <BrandWordmark className="text-[1.65rem] sm:text-4xl" />
             <span className="text-[1.35rem] leading-tight sm:text-2xl font-black tracking-tight block">
               <span style={{ color: "var(--text)" }}>Pokémon TCG</span>{" "}
-              <span style={{ color: "var(--red)" }}>prices &amp; marketplace</span>
+              <span style={{ color: "var(--red)" }}>{mp ? "prices &amp; listings" : "prices &amp; watchlist"}</span>
             </span>
           </h1>
           <p className="text-sm sm:text-base max-w-md mx-auto px-2" style={{ color: "var(--muted)" }}>
-            EU &amp; US market data in your currency — search, watchlist, and trade.
+            {mp
+              ? "EU & US price data in your currency — search, watchlist, and trade."
+              : "EU & US price data in your currency — search and watchlist your chase cards."}
           </p>
         </div>
       )}
@@ -184,10 +193,12 @@ export default function HomePage() {
             <BrandWordmark className="text-lg sm:text-xl" />
           </h2>
           <p className="text-sm text-center max-w-lg mx-auto mb-6 sm:mb-8 px-2" style={{ color: "var(--muted)" }}>
-            Pricing tools and a peer marketplace in one place—whether you are collecting, flipping, or just checking a card before you trade.
+            {mp
+              ? "Pricing tools and peer listings in one place—whether you are collecting, flipping, or checking a card before you trade."
+              : "Reference pricing from major sources, converted to the currency you choose—built for collectors and buyers who want a clear read on value."}
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 list-none m-0 p-0">
-            {BENEFITS.map((b) => (
+            {benefits.map((b) => (
               <li
                 key={b.title}
                 className="rounded-xl p-4 sm:p-5 flex gap-3 sm:gap-4"
@@ -213,16 +224,24 @@ export default function HomePage() {
             style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
           >
             <div className="min-w-0 text-center sm:text-left">
-              <p className="text-sm font-semibold m-0 mb-0.5">Ready to browse or list?</p>
+              <p className="text-sm font-semibold m-0 mb-0.5">{mp ? "Ready to browse or list?" : "Save cards to your watchlist"}</p>
               <p className="text-xs m-0" style={{ color: "var(--muted)" }}>
-                Search above, or jump straight to the marketplace and your account.
+                {mp
+                  ? "Search above, or open the listings hub and your account."
+                  : "Search above, then sign in to keep favorites in one place."}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 shrink-0 justify-center sm:justify-end w-full sm:w-auto">
-              <Link href="/marketplace" className="btn-primary text-center text-sm">
-                Browse marketplace
-              </Link>
-              <Link href="/auth/signup" className="btn-ghost text-center text-sm" style={{ borderColor: "var(--border)" }}>
+              {mp && (
+                <Link href="/marketplace" className="btn-primary text-center text-sm">
+                  Browse listings
+                </Link>
+              )}
+              <Link
+                href="/auth/signup"
+                className={mp ? "btn-ghost text-center text-sm" : "btn-primary text-center text-sm"}
+                style={mp ? { borderColor: "var(--border)" } : undefined}
+              >
                 Create account
               </Link>
             </div>

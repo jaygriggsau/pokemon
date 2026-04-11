@@ -55,7 +55,7 @@ function CustomTooltip({ active, payload, label }: any) {
       <p style={{ color: "var(--muted)", marginBottom: 4 }}>{label}</p>
       {payload.map((entry: { name: string; value: number; color: string }) => (
         <p key={entry.name} style={{ color: entry.color, fontWeight: 600 }}>
-          {entry.name === "eu" ? "EU Market" : "US Market"}:{" "}
+          {entry.name === "eu" ? "Cardmarket (EU)" : "TCGPlayer (US)"}:{" "}
           {format(entry.value, entry.name === "eu" ? "EUR" : "USD")}
         </p>
       ))}
@@ -116,7 +116,7 @@ export function PriceChart({ data, isSynthetic }: Props) {
               wrapperStyle={{ fontSize: narrow ? 10 : 12 }}
               formatter={(value) => (
                 <span style={{ color: "var(--muted)", fontSize: narrow ? 10 : 12 }}>
-                  {value === "eu" ? "EU Market" : "US Market"}
+                  {value === "eu" ? "Cardmarket (EU)" : "TCGPlayer (US)"}
                 </span>
               )}
             />

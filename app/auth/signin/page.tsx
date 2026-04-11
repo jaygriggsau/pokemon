@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { marketplaceEnabled } from "@/lib/features";
 
 function SignInForm() {
   const router = useRouter();
@@ -46,7 +47,9 @@ function SignInForm() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Sign in to pokemove — watchlist &amp; marketplace
+          {marketplaceEnabled()
+            ? "Sign in to pokemove — watchlist & listings"
+            : "Sign in to pokemove — search, watchlist, and saved prices"}
         </p>
       </div>
 

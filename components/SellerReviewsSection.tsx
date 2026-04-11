@@ -33,7 +33,7 @@ export function SellerReviewsSection({
           {heading}
         </h2>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
-          From verified purchases on this marketplace. Comments are optional.
+          From verified purchases. Comments are optional.
         </p>
       </div>
 

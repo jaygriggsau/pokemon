@@ -87,7 +87,7 @@ export default function EarningsPage() {
     <div className="max-w-lg mx-auto flex flex-col gap-6 py-4">
       <div>
         <Link href="/marketplace" className="text-sm" style={{ color: "var(--muted)" }}>
-          ← Marketplace
+          ← Listings
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold mt-2">Seller earnings</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>

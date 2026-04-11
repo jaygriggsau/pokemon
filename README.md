@@ -1,6 +1,6 @@
 # pokemove
 
-Pokémon TCG prices and marketplace. Search cards, compare EU (Cardmarket) and US (TCGPlayer) prices side by side, keep a watchlist, and buy or sell listings.
+Pokémon TCG prices. Search cards, compare EU (Cardmarket) and US (TCGPlayer) prices side by side, and keep a watchlist. Optional peer-to-peer listings are **off by default**; set `NEXT_PUBLIC_MARKETPLACE_ENABLED=true` to expose them.
 
 ## Features
 
@@ -8,7 +8,7 @@ Pokémon TCG prices and marketplace. Search cards, compare EU (Cardmarket) and U
 - **Price data** - Cardmarket (EU, EUR) and TCGPlayer (US, USD) prices in one view
 - **User accounts** - email/password sign-up, optional GitHub OAuth
 - **Watchlist** - save cards to track across sessions
-- **Marketplace** - peer-to-peer listings with photo uploads, buyer/seller messaging before purchase, and optional Stripe card checkout (Connect payouts)
+- **Listings (optional)** - when enabled via `NEXT_PUBLIC_MARKETPLACE_ENABLED=true`: photo listings, buyer/seller messaging, optional Stripe checkout (Connect payouts)
 
 ## Stack
 
@@ -17,7 +17,7 @@ Pokémon TCG prices and marketplace. Search cards, compare EU (Cardmarket) and U
 | Framework | Next.js 16 (App Router) |
 | Auth | NextAuth.js v4 |
 | Database | Neon PostgreSQL (serverless) |
-| Object storage | Vercel Blob (marketplace photos) |
+| Object storage | Vercel Blob (listing photos when listings are enabled) |
 | Payments | Stripe Checkout + Stripe Connect (Express sellers) |
 | Price API | TCGGO via RapidAPI |
 | Styling | Tailwind CSS v4 |

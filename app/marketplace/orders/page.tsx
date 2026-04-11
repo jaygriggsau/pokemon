@@ -156,7 +156,7 @@ function OrdersContent() {
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       <div>
         <Link href="/marketplace" className="text-sm" style={{ color: "var(--muted)" }}>
-          ← Marketplace
+          ← Listings
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold mt-2">Orders</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>

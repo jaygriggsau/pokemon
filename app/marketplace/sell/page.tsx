@@ -473,7 +473,7 @@ function SellForm() {
       const data = await readResponseJson<{ error?: string; id?: number }>(res);
       if (!res.ok) throw new Error(data.error ?? "Couldn’t publish the listing.");
       if (typeof data.id !== "number")
-        throw new Error("Listing may have been created—refresh the marketplace to check.");
+        throw new Error("Listing may have been created—refresh the listings page to check.");
       router.push(listingSharePath({ id: data.id, card_name: selected.name }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -498,7 +498,7 @@ function SellForm() {
     <div className="flex flex-col gap-8 max-w-xl mx-auto">
       <div>
         <Link href="/marketplace" className="text-sm mb-2 inline-block" style={{ color: "var(--muted)" }}>
-          ← Marketplace
+          ← Listings
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Sell a card</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
