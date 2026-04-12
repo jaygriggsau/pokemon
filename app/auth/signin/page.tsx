@@ -22,19 +22,29 @@ function SignInForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: email.trim(),
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
-
-    if (result?.error) {
-      setError("Invalid email or password.");
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
+      if (!result) {
+        setError("Could not reach the server. Check your connection and try again.");
+      } else if (!result.ok) {
+        setError(
+          result.error === "CredentialsSignin"
+            ? "Invalid email or password."
+            : "Sign in failed. Try again in a moment."
+        );
+      } else {
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch {
+      setError("Sign in failed. Try again in a moment.");
+    } finally {
+      setLoading(false);
     }
   }
 

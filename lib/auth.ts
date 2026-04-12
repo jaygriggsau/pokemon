@@ -37,20 +37,24 @@ export const authOptions: NextAuthOptions = {
 
         const email = credentials.email.trim().toLowerCase();
 
-        const rows = await sql`
-          SELECT id, name, email, password_hash
-          FROM users
-          WHERE LOWER(TRIM(email)) = ${email}
-          LIMIT 1
-        `;
+        try {
+          const rows = await sql`
+            SELECT id, name, email, password_hash
+            FROM users
+            WHERE LOWER(TRIM(email)) = ${email}
+            LIMIT 1
+          `;
 
-        const user = rows[0];
-        if (!user?.password_hash) return null;
+          const user = rows[0];
+          if (!user?.password_hash) return null;
 
-        const valid = await bcrypt.compare(credentials.password, user.password_hash);
-        if (!valid) return null;
+          const valid = await bcrypt.compare(credentials.password, user.password_hash);
+          if (!valid) return null;
 
-        return { id: user.id, name: user.name, email: user.email };
+          return { id: user.id, name: user.name, email: user.email };
+        } catch {
+          return null;
+        }
       },
     }),
     ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
@@ -69,15 +73,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "github" && user.email) {
-        const existing = await sql`SELECT id FROM users WHERE email = ${user.email} LIMIT 1`;
-        if (existing.length === 0) {
-          await sql`
-            INSERT INTO users (name, email, image)
-            VALUES (${user.name ?? null}, ${user.email}, ${user.image ?? null})
-          `;
+        try {
+          const existing = await sql`SELECT id FROM users WHERE email = ${user.email} LIMIT 1`;
+          if (existing.length === 0) {
+            await sql`
+              INSERT INTO users (name, email, image)
+              VALUES (${user.name ?? null}, ${user.email}, ${user.image ?? null})
+            `;
+          }
+          const dbUser = await sql`SELECT id FROM users WHERE email = ${user.email} LIMIT 1`;
+          user.id = dbUser[0].id;
+        } catch {
+          return false;
         }
-        const dbUser = await sql`SELECT id FROM users WHERE email = ${user.email} LIMIT 1`;
-        user.id = dbUser[0].id;
       }
       return true;
     },
