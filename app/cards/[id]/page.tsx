@@ -7,7 +7,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCurrency } from "@/lib/currency-context";
 import { PriceChart } from "@/components/PriceChart";
-import { buildPriceHistory, artistName, type TcgCard, type GradedPrices } from "@/lib/tcggo";
+import { PriceStats } from "@/components/PriceStats";
+import { PriceSpread } from "@/components/PriceSpread";
+import { RegionalPrices } from "@/components/RegionalPrices";
+import { buildPriceHistory, computePriceStats, artistName, type TcgCard, type GradedPrices } from "@/lib/tcggo";
 import { formatMonthYear } from "@/lib/format-date";
 import { marketplaceEnabled } from "@/lib/features";
 import { AddToCollection } from "@/components/AddToCollection";
@@ -98,6 +101,7 @@ export default function CardDetailPage() {
   const tcg = card.prices?.tcg_player;
   const chartData   = buildPriceHistory(card);
   const isSynthetic = !cm?.history || cm.history.length <= 1;
+  const priceStats  = computePriceStats(chartData);
 
   const supertype = card.supertype?.replace(/[^\x00-\x7F]/g, "") || "";
   const mp = marketplaceEnabled();
@@ -237,8 +241,12 @@ export default function CardDetailPage() {
                 {cm?.lowest_near_mint != null && (
                   <MarketCard
                     market="Cardmarket" region="EU" accentColor="var(--eu-color)"
+                    delta={cm["30d_average"] != null && cm.lowest_near_mint != null && cm["30d_average"] > 0
+                      ? ((cm.lowest_near_mint - cm["30d_average"]) / cm["30d_average"]) * 100
+                      : undefined}
                     rows={[
                       { label: "Near Mint",  value: format(cm.lowest_near_mint,   "EUR"), highlight: true },
+                      cm["1d_average"]  != null && { label: "1d avg",   value: format(cm["1d_average"]!,  "EUR") },
                       cm["7d_average"]  != null && { label: "7d avg",   value: format(cm["7d_average"]!,  "EUR") },
                       cm["30d_average"] != null && { label: "30d avg",  value: format(cm["30d_average"]!, "EUR") },
                     ].filter(Boolean) as { label: string; value: string; highlight?: boolean }[]}
@@ -248,8 +256,10 @@ export default function CardDetailPage() {
                   <MarketCard
                     market="TCGPlayer" region="US" accentColor="var(--red)"
                     rows={[
-                      { label: "Listed",  value: format(tcg.market_price, tcg.currency as "EUR" | "USD" ?? "USD"), highlight: true },
+                      { label: "Market",  value: format(tcg.market_price, tcg.currency as "EUR" | "USD" ?? "USD"), highlight: true },
+                      tcg.low_price != null && { label: "Low",  value: format(tcg.low_price, tcg.currency as "EUR" | "USD" ?? "USD") },
                       tcg.mid_price != null && { label: "Mid",  value: format(tcg.mid_price, tcg.currency as "EUR" | "USD" ?? "USD") },
+                      tcg.high_price != null && { label: "High",  value: format(tcg.high_price, tcg.currency as "EUR" | "USD" ?? "USD") },
                     ].filter(Boolean) as { label: string; value: string; highlight?: boolean }[]}
                   />
                 )}
@@ -262,20 +272,48 @@ export default function CardDetailPage() {
         </div>
       </div>
 
-      {/* ── Price History ── */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-base font-bold">Price History</h2>
-          {isSynthetic && (
-            <span className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "var(--surface-raised)", color: "var(--muted)", border: "1px solid var(--border)" }}>
-              averages only
-            </span>
-          )}
+      {/* ── Price Analysis ── */}
+      <section className="flex flex-col gap-6">
+        {/* Chart */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-bold">Price History</h2>
+            {isSynthetic && (
+              <span className="text-xs px-2 py-0.5 rounded-full"
+                style={{ background: "var(--surface-raised)", color: "var(--muted)", border: "1px solid var(--border)" }}>
+                averages only
+              </span>
+            )}
+          </div>
+          <div className="rounded-xl p-2 sm:p-4 min-w-0 overflow-x-auto" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <PriceChart
+              data={chartData}
+              isSynthetic={isSynthetic}
+              euAvg={priceStats.eu?.avg}
+              usAvg={priceStats.us?.avg}
+            />
+          </div>
         </div>
-        <div className="rounded-xl p-2 sm:p-4 min-w-0 overflow-x-auto" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <PriceChart data={chartData as { date: string; eu?: number; us?: number }[]} isSynthetic={isSynthetic} />
-        </div>
+
+        {/* Statistics */}
+        {(priceStats.eu || priceStats.us) && (
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Price Statistics</SectionLabel>
+            <PriceStats eu={priceStats.eu} us={priceStats.us} />
+          </div>
+        )}
+
+        {/* Price Spread */}
+        {(cm || tcg) && (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-xl p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <PriceSpread cardmarket={cm} tcgPlayer={tcg} />
+            </div>
+          </div>
+        )}
+
+        {/* EU Regional Prices */}
+        {cm && <RegionalPrices cardmarket={cm} />}
       </section>
 
     </div>
@@ -314,19 +352,34 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function MarketCard({ market, region, accentColor, rows }: {
+function MarketCard({ market, region, accentColor, rows, delta }: {
   market: string; region: string; accentColor: string;
   rows: { label: string; value: string; highlight?: boolean }[];
+  delta?: number;
 }) {
   return (
     <div className="rounded-xl p-4 flex flex-col gap-2.5 min-w-0"
       style={{ background: "var(--surface-raised)", border: "1px solid var(--border)", borderTop: `2px solid ${accentColor}` }}>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-bold px-1.5 py-0.5 rounded"
-          style={{ background: accentColor, color: "white", fontSize: "0.6rem", letterSpacing: "0.05em" }}>
-          {region}
-        </span>
-        <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>{market}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded"
+            style={{ background: accentColor, color: "white", fontSize: "0.6rem", letterSpacing: "0.05em" }}>
+            {region}
+          </span>
+          <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>{market}</span>
+        </div>
+        {delta != null && Math.abs(delta) >= 0.1 && (
+          <span
+            className="text-xs font-bold px-1.5 py-0.5 rounded"
+            style={{
+              color: delta > 0 ? "#22c55e" : "#ef4444",
+              background: delta > 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+            }}
+          >
+            {delta > 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%
+            <span className="font-normal" style={{ color: "var(--muted)", fontSize: "0.55rem" }}> vs 30d</span>
+          </span>
+        )}
       </div>
       {rows.map(({ label, value, highlight }) => (
         <div key={label} className="flex justify-between items-baseline gap-2 min-w-0">

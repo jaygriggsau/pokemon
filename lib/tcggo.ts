@@ -158,18 +158,25 @@ export function artistName(artist?: TcgArtist | string): string | undefined {
   return artist.name;
 }
 
-/** Build a chart data series from a card's price averages (synthetic 3-point) */
-export function buildPriceHistory(card: TcgCard) {
+export type PriceHistoryRow = { date: string; eu?: number; us?: number };
+
+/** Build a chart data series from a card's price history or averages */
+export function buildPriceHistory(card: TcgCard): PriceHistoryRow[] {
   const cm  = card.prices?.cardmarket;
   const tcg = card.prices?.tcg_player;
 
-  if (cm?.history && cm.history.length > 1) return cm.history;
+  if (cm?.history && cm.history.length > 1) {
+    return cm.history.map((pt) => ({
+      date: pt.date,
+      eu: pt.price,
+      us: undefined,
+    }));
+  }
 
   const now = Date.now();
   const day = 86_400_000;
 
-  type Row = { date: string; eu?: number; us?: number };
-  const rows: Row[] = [];
+  const rows: PriceHistoryRow[] = [];
 
   if (cm?.["30d_average"] != null || tcg?.market_price != null) {
     rows.push({
@@ -184,6 +191,12 @@ export function buildPriceHistory(card: TcgCard) {
       eu: cm["7d_average"],
     });
   }
+  if (cm?.["1d_average"] != null) {
+    rows.push({
+      date: new Date(now - 1 * day).toISOString().slice(0, 10),
+      eu: cm["1d_average"],
+    });
+  }
   if (cm?.lowest_near_mint != null || tcg?.market_price != null) {
     rows.push({
       date: new Date(now).toISOString().slice(0, 10),
@@ -192,6 +205,27 @@ export function buildPriceHistory(card: TcgCard) {
     });
   }
   return rows;
+}
+
+/** Compute summary statistics from price history rows */
+export function computePriceStats(rows: PriceHistoryRow[]) {
+  const euVals = rows.map((r) => r.eu).filter((v): v is number => v != null);
+  const usVals = rows.map((r) => r.us).filter((v): v is number => v != null);
+
+  function stats(vals: number[]) {
+    if (vals.length === 0) return null;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const first = vals[0];
+    const last = vals[vals.length - 1];
+    const changePct = first !== 0 ? ((last - first) / first) * 100 : 0;
+    const changeAbs = last - first;
+    const spread = max - min;
+    return { min, max, avg, first, last, changePct, changeAbs, spread, count: vals.length };
+  }
+
+  return { eu: stats(euVals), us: stats(usVals) };
 }
 
 /** Cardmarket lowest NM in EUR, if present. */

@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.tcggo.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "images.pokemontcg.io" },
     ],
   },
 };
